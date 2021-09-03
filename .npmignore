@@ -1,6 +1,6 @@
 src/
-etsc.config.
+etsc.config.js
 tsconfig.json
 nodemon.json
-typeings
+typeings/
 .*
