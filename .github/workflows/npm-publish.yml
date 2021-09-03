@@ -17,7 +17,7 @@ jobs:
       - name: Install
         run: npm i
       - name: Build dist
-        run: etsc
+        run: npx etsc
       - name: Publish Npm
         uses: JS-DevTools/npm-publish@v1
         with:
