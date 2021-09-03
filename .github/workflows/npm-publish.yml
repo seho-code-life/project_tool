@@ -8,17 +8,15 @@ jobs:
     name: npm-publish
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: 切换仓库
         uses: actions/checkout@master
-      - name: Set up Node.js
+      - name: 准备Node环境
         uses: actions/setup-node@master
         with:
           node-version: 12.13.0
-      - name: Install
-        run: npm i
-      - name: Build dist
-        run: npx etsc
-      - name: Publish Npm
+      - name: 安装依赖以及编译
+        run: npm i && npx etsc
+      - name: 推送到NPM
         uses: JS-DevTools/npm-publish@v1
         with:
           token: ${{ secrets.NPM_AUTH_TOKEN }}
