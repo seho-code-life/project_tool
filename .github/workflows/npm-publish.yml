@@ -16,7 +16,7 @@ jobs:
         tag_name: "v%s"
         tag_message: "v%s"
         create_tag: "true"
-        commit_pattern: "^Release (\\S+)"
+        commit_pattern: "^\\s*v((\\d+\\.){2}\\d+)\\s*$"
         workspace: "."
         publish_command: "yarn"
         publish_args: "--non-interactive"
