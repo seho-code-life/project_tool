@@ -4,7 +4,6 @@
   "description": "",
   "scripts": {
     "run": "nodemon",
-    "prepare": "husky install",
     "lint": "eslint 'src/**/*' --fix",
     "prettier": "prettier --write '**/*.{ts,js,json,markdown}'",
     "lint-staged": "lint-staged",
