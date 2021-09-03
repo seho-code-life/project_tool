@@ -1,6 +1,6 @@
 {
   "watch": ["src/*", "tsconfig.json"],
   "ext": "ts",
-  "exec": "rm -rf dist && npx tsc -p tsconfig.json",
+  "exec": "etsc",
   "legacyWatch": true
 }
