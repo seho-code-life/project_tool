@@ -8,8 +8,8 @@
     "moduleResolution": "Node",
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "typeRoots": ["./node_modules/@types", "./typings"]
   },
-  "typeRoots": ["./node_modules/@types", "./src/types"],
   "include": ["./src/*.ts"]
 }
