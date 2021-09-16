@@ -9,7 +9,7 @@ import chalk from 'chalk';
 
 const spinner = ora('下载模板中, 请稍后...');
 
-// 模板字典
+// 模板列表
 const template: { name: string; value: string }[] = [
   {
     name: 'vue3-vite2-ts-template （ant-design-vue）模板文档: https://github.com/seho-code-life/project_template/tree/vue3-vite2-ts-template(release)',
@@ -21,7 +21,87 @@ const template: { name: string; value: string }[] = [
   }
 ];
 
-// 安装项目依赖
+// 定义功能的key数组
+type FunctionKeys = 'editor' | 'commitHook' | 'eslint' | 'prettierr' | 'vscode';
+
+// function功能列表
+const functionsList: { name: string; value: FunctionKeys; checked: boolean }[] = [
+  {
+    name: 'editorconfig (统一IDE配置)',
+    value: 'editor',
+    checked: true
+  },
+  {
+    name: 'husky & lint-staged git提交钩子',
+    value: 'commitHook',
+    checked: true
+  },
+  {
+    name: 'eslint (如果已选择，那么git提交之前将会自动eslint)',
+    value: 'eslint',
+    checked: true
+  },
+  {
+    name: 'prettierr (如果已选择，那么git提交之前将会自动prettierr)',
+    value: 'prettierr',
+    checked: true
+  },
+  {
+    name: 'vscode相关配置 (setting + code-snippets)',
+    value: 'vscode',
+    checked: false
+  }
+];
+
+// handlefunction和对应处理回调需要一个泛型，即当前的path和package，需要用这些参数去修改模板
+type EditTemplate = { package: Record<string, unknown>; path: string };
+
+// 功能列表的回调字典，这里是“递减”，即如果用户没有选择，那么就走对应的回调去删减配置
+const functionsCallBack: Record<FunctionKeys, (params: EditTemplate) => void> = {
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  editor: (params: EditTemplate) => {},
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  commitHook: (params: EditTemplate) => {},
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  eslint: (params: EditTemplate) => {},
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  prettierr: (params: EditTemplate) => {},
+  vscode: (params: EditTemplate) => {
+    // 删除原有模板的.vscode文件夹
+    exec(`rm -rf .vscode`, {
+      cwd: params.path
+    });
+  }
+};
+
+/**
+ * @description 处理functions
+ * @param params
+ * @returns
+ */
+const handleFunctions = (params: { checkedfunctions: FunctionKeys[] } & EditTemplate): Promise<void> => {
+  const { checkedfunctions } = params;
+  return new Promise((resolve, reject) => {
+    // 获取列表固有的functions（即全部的functions）
+    const allFunctions = functionsList.map((f) => f.value);
+    // 查看哪几个用户没有选择，没有选择就走对应回调函数
+    const differenceFunctions = allFunctions.filter((a) => !checkedfunctions.includes(a));
+    // 执行对应的回调函数
+    try {
+      differenceFunctions.map((d) => functionsCallBack[d](params));
+    } catch (error) {
+      reject(
+        `处理用户选择的功能时出现了错误: ${error}; 请前往 https://github.com/seho-code-life/project_tool/issues/new 报告此错误; 但是这不影响你使用此模板，您可以自行删减功能`
+      );
+    }
+    resolve();
+  });
+};
+
+/**
+ * @description 安装项目依赖
+ * @param params
+ */
 const install = (params: { projectName: string }) => {
   const { projectName } = params;
   spinner.text = '正在安装依赖，如果您的网络情况较差，这可能是一杯茶的功夫';
@@ -41,18 +121,32 @@ const install = (params: { projectName: string }) => {
   });
 };
 
-// 修改下载好的模板package.json
-const editPackageInfo = (params: { projectName: string }) => {
-  const { projectName } = params;
+/**
+ * @description 修改下载好的模板package.json 以及处理functions
+ * @param params
+ */
+const editPackageInfo = (params: { projectName: string; functions: FunctionKeys[] }) => {
+  const { projectName, functions } = params;
   // 获取项目路径
   const path = `${process.cwd()}/${projectName}`;
   // 读取项目中的packagejson文件
-  fs.readFile(`${path}/package.json`, (err, data) => {
+  fs.readFile(`${path}/package.json`, async (err, data) => {
     if (err) throw err;
     // 获取json数据并修改项目名称和版本号
     const _data = JSON.parse(data.toString());
     // 修改package的name名称
     _data.name = projectName;
+    // 处理functions, 去在模板中做一些其他操作，比如删除几行依赖/删除几个文件
+    try {
+      await handleFunctions({
+        checkedfunctions: functions,
+        package: _data,
+        path
+      });
+    } catch (error) {
+      spinner.text = `${error}`;
+      spinner.fail();
+    }
     const str = JSON.stringify(_data, null, 4);
     // 写入文件
     fs.writeFile(`${path}/package.json`, str, function (err) {
@@ -63,12 +157,15 @@ const editPackageInfo = (params: { projectName: string }) => {
   });
 };
 
-// 下载模板
-const downloadTemplate = (params: { repository: string; projectName: string }) => {
-  const { repository, projectName } = params;
+/**
+ * @description 下载模板
+ * @param params
+ */
+const downloadTemplate = (params: { repository: string; projectName: string; functions: FunctionKeys[] }) => {
+  const { repository, projectName, functions } = params;
   download(repository, projectName, (err) => {
     if (!err) {
-      editPackageInfo({ projectName });
+      editPackageInfo({ projectName, functions });
     } else {
       console.log(err);
       spinner.stop(); // 停止
@@ -101,17 +198,30 @@ const questions = [
     name: 'template',
     choices: template,
     message: '请选择要拉取的模板'
+  },
+  {
+    type: 'checkbox',
+    name: 'functions',
+    choices: functionsList,
+    message: '请选择默认安装的功能'
   }
 ];
 
-inquirer.prompt(questions).then((answers) => {
+type QuestionAnswers = {
+  template: string;
+  projectName: string;
+  functions: FunctionKeys[];
+};
+
+inquirer.prompt(questions).then((answers: QuestionAnswers) => {
   // 获取答案
-  const { template: templateUrl, projectName } = answers;
+  const { template: templateUrl, projectName, functions } = answers;
   spinner.start();
   spinner.color = 'green';
   // 开始下载模板
   downloadTemplate({
     repository: templateUrl,
-    projectName
+    projectName,
+    functions
   });
 });
