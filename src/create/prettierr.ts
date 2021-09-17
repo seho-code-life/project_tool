@@ -13,8 +13,8 @@ const main = (template: EditTemplate): CreateFunctionRes => {
   // 将template中的prettierr内容拷贝到根目录
   const rc = fs.readFileSync(path.resolve(__dirname, '..', 'template/prettierr/.prettierrc'));
   const ignore = fs.readFileSync(path.resolve(__dirname, '..', 'template/prettierr/.prettierignore'));
-  fs.writeFileSync('.prettierrc', rc);
-  fs.writeFileSync('.prettierignore', ignore);
+  fs.writeFileSync(path.resolve(template.path, '.prettierrc'), rc);
+  fs.writeFileSync(path.resolve(template.path, '.prettierignore'), ignore);
   return {
     projectData
   };

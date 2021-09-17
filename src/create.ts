@@ -17,8 +17,8 @@ const spinner = ora('下载模板中, 请稍后...');
 // 模板列表
 const template: { name: string; value: string }[] = [
   {
-    name: 'vue3-vite2-ts-template （ant-design-vue）模板文档: https://github.com/seho-code-life/project_template/tree/vue3-vite2-ts-template(release)',
-    value: 'seho-code-life/project_template#vue3-vite2-ts-template(release)'
+    name: 'vue3-vite2-ts-template （ant-design-vue）模板文档: https://github.com/seho-code-life/project_template/tree/base-template',
+    value: 'seho-code-life/project_template#base-template'
   },
   {
     name: 'node-command-ts-template                 模板文档: https://github.com/seho-code-life/project_template/tree/node-command-cli',
@@ -58,8 +58,8 @@ const functionsList: { name: string; value: FunctionKeys; checked: boolean }[] =
   }
 ];
 
-// 功能列表的回调字典，这里是“递减”，即如果用户没有选择，那么就走对应的回调去删减配置
-const functionsCallBack: Record<FunctionKeys, (params: EditTemplate) => void> = {
+// 功能列表的回调字典，内部函数处理了对package的读写&处理文件等操作
+const functionsCallBack: Record<FunctionKeys, (params: EditTemplate) => CreateFunctionRes> = {
   editor: (params: EditTemplate) => handleEditor(params),
   commitHook: (params: EditTemplate) => handleCommitHook(params),
   eslint: (params: EditTemplate) => handleEslint(params),
@@ -77,7 +77,10 @@ const handleFunctions = (params: { checkedfunctions: FunctionKeys[] } & EditTemp
   return new Promise((resolve, reject) => {
     // 执行对应的回调函数
     try {
-      checkedfunctions.map((c) => functionsCallBack[c](params));
+      checkedfunctions.map((c) => {
+        params.package = functionsCallBack[c](params).projectData;
+      });
+      console.log('结束了', params.package);
     } catch (error) {
       reject(
         `处理用户选择的功能时出现了错误: ${error}; 请前往 https://github.com/seho-code-life/project_tool/issues/new 报告此错误; 但是这不影响你使用此模板，您可以自行删减功能`

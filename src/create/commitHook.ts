@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 
-import fs from 'fs';
 import path from 'path';
 import { exists } from '../util/file';
 
@@ -19,7 +18,9 @@ const main = (template: EditTemplate): CreateFunctionRes => {
     'lint-staged': '^11.1.2'
   };
   // 将template的文件复制到根目录
-  exists(path.resolve(__dirname, '../template/commitHook/.husky'), '.husky');
+  exists(path.resolve(__dirname, '../template/commitHook/.husky'), '.husky', {
+    dstPath: template.path
+  });
   return {
     projectData
   };

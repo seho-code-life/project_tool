@@ -1,4 +1,5 @@
 import fs from 'fs';
+import path from 'path';
 const stat = fs.stat;
 /*
  * 复制目录中的所有文件包括子目录
@@ -20,6 +21,7 @@ const copy = function (src: string, dst: string): void {
         if (err) {
           throw err;
         }
+        console.log(_src, st);
         // 判断是否为文件
         if (st.isFile()) {
           // 创建读取流
@@ -31,21 +33,33 @@ const copy = function (src: string, dst: string): void {
         }
         // 如果是目录则递归调用自身
         else if (st.isDirectory()) {
-          exists(_src, _dst, copy);
+          exists(_src, _dst);
         }
       });
     });
   });
 };
 
+let _options = {
+  dstPath: __dirname
+};
+
 // 在复制目录前需要判断该目录是否存在，不存在需要先创建目录
-const exists = function (src: string, dst: string, callback: (src: string, dst: string) => void = copy): void {
-  const exists = fs.existsSync(dst);
+const exists = function (
+  src: string,
+  dst: string,
+  options: {
+    dstPath: string;
+  } = _options
+): void {
+  _options = options;
+  const dstFullPath = path.resolve(options.dstPath, dst);
+  const exists = fs.existsSync(dstFullPath);
   if (exists) {
-    callback(src, dst);
+    copy(src, dstFullPath);
   } else {
-    fs.mkdir(dst, function () {
-      callback(src, dst);
+    fs.mkdir(dstFullPath, function () {
+      copy(src, dstFullPath);
     });
   }
 };

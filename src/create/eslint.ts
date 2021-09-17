@@ -23,8 +23,8 @@ const main = (template: EditTemplate): CreateFunctionRes => {
   // 将template中的vscode内容拷贝到根目录
   const rc = fs.readFileSync(path.resolve(__dirname, '..', 'template/eslint/.eslintrc.js'));
   const ignore = fs.readFileSync(path.resolve(__dirname, '..', 'template/eslint/.eslintignore'));
-  fs.writeFileSync('.eslintrc.js', rc);
-  fs.writeFileSync('.eslintignore', ignore);
+  fs.writeFileSync(path.resolve(template.path, '.eslintrc.js'), rc);
+  fs.writeFileSync(path.resolve(template.path, '.eslintignore'), ignore);
   return {
     projectData
   };
