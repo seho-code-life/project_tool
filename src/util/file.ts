@@ -12,7 +12,6 @@ const copy = function (src: string, dst: string): void {
       throw err;
     }
     paths.forEach(function (path) {
-      console.log(path);
       const _src = src + '/' + path,
         _dst = dst + '/' + path;
       let readable;
