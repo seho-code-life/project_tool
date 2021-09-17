@@ -6,6 +6,11 @@ import fs from 'fs';
 import { exec } from 'child_process';
 import download from 'download-git-repo';
 import chalk from 'chalk';
+import handleEditor from './create/editor';
+import handleCommitHook from './create/commitHook';
+import handleEslint from './create/eslint';
+import handlePrettierr from './create/prettierr';
+import handleVscode from './create/vscode';
 
 const spinner = ora('下载模板中, 请稍后...');
 
@@ -53,25 +58,13 @@ const functionsList: { name: string; value: FunctionKeys; checked: boolean }[] =
   }
 ];
 
-// handlefunction和对应处理回调需要一个泛型，即当前的path和package，需要用这些参数去修改模板
-type EditTemplate = { package: Record<string, unknown>; path: string };
-
 // 功能列表的回调字典，这里是“递减”，即如果用户没有选择，那么就走对应的回调去删减配置
 const functionsCallBack: Record<FunctionKeys, (params: EditTemplate) => void> = {
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  editor: (params: EditTemplate) => {},
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  commitHook: (params: EditTemplate) => {},
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  eslint: (params: EditTemplate) => {},
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  prettierr: (params: EditTemplate) => {},
-  vscode: (params: EditTemplate) => {
-    // 删除原有模板的.vscode文件夹
-    exec(`rm -rf .vscode`, {
-      cwd: params.path
-    });
-  }
+  editor: (params: EditTemplate) => handleEditor(params),
+  commitHook: (params: EditTemplate) => handleCommitHook(params),
+  eslint: (params: EditTemplate) => handleEslint(params),
+  prettierr: (params: EditTemplate) => handlePrettierr(params),
+  vscode: (params: EditTemplate) => handleVscode(params)
 };
 
 /**
@@ -82,13 +75,9 @@ const functionsCallBack: Record<FunctionKeys, (params: EditTemplate) => void> = 
 const handleFunctions = (params: { checkedfunctions: FunctionKeys[] } & EditTemplate): Promise<void> => {
   const { checkedfunctions } = params;
   return new Promise((resolve, reject) => {
-    // 获取列表固有的functions（即全部的functions）
-    const allFunctions = functionsList.map((f) => f.value);
-    // 查看哪几个用户没有选择，没有选择就走对应回调函数
-    const differenceFunctions = allFunctions.filter((a) => !checkedfunctions.includes(a));
     // 执行对应的回调函数
     try {
-      differenceFunctions.map((d) => functionsCallBack[d](params));
+      checkedfunctions.map((c) => functionsCallBack[c](params));
     } catch (error) {
       reject(
         `处理用户选择的功能时出现了错误: ${error}; 请前往 https://github.com/seho-code-life/project_tool/issues/new 报告此错误; 但是这不影响你使用此模板，您可以自行删减功能`
@@ -153,7 +142,7 @@ const editPackageInfo = (params: { projectName: string; functions: FunctionKeys[
       if (err) throw err;
     });
     spinner.text = `下载完成, 正在自动安装项目依赖...`;
-    install({ projectName });
+    // install({ projectName });
   });
 };
 
@@ -167,7 +156,6 @@ const downloadTemplate = (params: { repository: string; projectName: string; fun
     if (!err) {
       editPackageInfo({ projectName, functions });
     } else {
-      console.log(err);
       spinner.stop(); // 停止
       console.log(chalk.red('拉取模板出现未知错误'));
     }
@@ -216,6 +204,7 @@ type QuestionAnswers = {
 inquirer.prompt(questions).then((answers: QuestionAnswers) => {
   // 获取答案
   const { template: templateUrl, projectName, functions } = answers;
+  console.log(functions);
   spinner.start();
   spinner.color = 'green';
   // 开始下载模板

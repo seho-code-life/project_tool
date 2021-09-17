@@ -4,8 +4,8 @@ import fs from 'fs';
 import path from 'path';
 import { exists } from '../util/file';
 
-const main = (): CreateFunctionRes => {
-  const projectData: PackageData = JSON.parse(fs.readFileSync('package.json').toString());
+const main = (template: EditTemplate): CreateFunctionRes => {
+  const { package: projectData } = template;
   // 新增依赖/packagejson的配置项
   projectData.scripts = {
     ...projectData.scripts,
@@ -18,8 +18,6 @@ const main = (): CreateFunctionRes => {
     husky: '^7.0.1',
     'lint-staged': '^11.1.2'
   };
-  // 将写入packagejson TODO
-  fs.writeFileSync('package.json', JSON.stringify(projectData, null, 4));
   // 将template的文件复制到根目录
   exists(path.resolve(__dirname, '../template/commitHook/.husky'), '.husky');
   return {
