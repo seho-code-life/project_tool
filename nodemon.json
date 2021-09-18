@@ -1,6 +1,6 @@
 {
   "watch": ["src/*", "tsconfig.json"],
   "ext": "ts",
-  "exec": "etsc",
+  "exec": "etsc && cp -rv src/template dist/template",
   "legacyWatch": true
 }
