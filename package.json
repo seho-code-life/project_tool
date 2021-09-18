@@ -19,8 +19,7 @@
     ]
   },
   "bin": {
-    "enjoy": "dist/main.js",
-    "etest": "dist/test/create.js"
+    "enjoy": "dist/main.js"
   },
   "author": "",
   "license": "ISC",
