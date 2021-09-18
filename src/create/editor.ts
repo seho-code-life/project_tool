@@ -6,7 +6,7 @@ import fs from 'fs';
 const main = (template: EditTemplate): CreateFunctionRes => {
   const { package: projectData } = template;
   const config = fs.readFileSync(path.resolve(__dirname, '..', 'template/editor/.editorconfig'));
-  fs.writeFileSync(path.resolve(template.path, 'editorconfig'), config);
+  fs.writeFileSync(path.resolve(template.path, '.editorconfig'), config);
   return {
     projectData
   };

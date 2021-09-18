@@ -8,7 +8,7 @@ import download from 'download-git-repo';
 import chalk from 'chalk';
 import handleEditor from './create/editor';
 import handleCommitHook from './create/commitHook';
-import handleEslint from './create/eslint';
+import handleEslint, { eslintConfigAddPrettierr } from './create/eslint';
 import handlePrettierr from './create/prettierr';
 import handleVscode from './create/vscode';
 
@@ -68,11 +68,12 @@ const functionsCallBack: Record<FunctionKeys, (params: EditTemplate) => CreateFu
 };
 
 /**
- * @description 处理functions
- * @param params
- * @returns
+ * @name 处理对应操作的函数
+ * @description eslint, editor等等
+ * @param {({ checkedfunctions: FunctionKeys[] } & EditTemplate)} params
+ * @return {*}  {Promise<void>}
  */
-const handleFunctions = (params: { checkedfunctions: FunctionKeys[] } & EditTemplate): Promise<void> => {
+const handleFunctions = (params: { checkedfunctions: FunctionKeys[] } & EditTemplate): Promise<PackageData> => {
   const { checkedfunctions } = params;
   return new Promise((resolve, reject) => {
     // 执行对应的回调函数
@@ -80,23 +81,50 @@ const handleFunctions = (params: { checkedfunctions: FunctionKeys[] } & EditTemp
       checkedfunctions.map((c) => {
         params.package = functionsCallBack[c](params).projectData;
       });
-      console.log('结束了', params.package);
+      // 判断是否选择了eslint / prettierr
+      const isEslint = checkedfunctions.includes('eslint');
+      const isPrettierr = checkedfunctions.includes('prettierr');
+      // 处理函数中有一些部分比较复杂，比如lint和eslint的组合搭配，这部分我们单独写，就不归纳到处理函数字典里了
+      // 如果用户选择了commitHook，且要和eslint，prettierr搭配
+      if (checkedfunctions.includes('commitHook')) {
+        const ruleKey = '*.{vue,ts,tsx,js,jsx,json,markdown}';
+        // 如果选择了commithook，就初始化lint-stage的脚本, 默认我们拼接一个git add
+        params.package['lint-staged'] = {
+          [ruleKey]: ['git add']
+        };
+        if (isEslint || isPrettierr) {
+          // 这里的orders是一个数组，数组从头到尾是依次执行的命令
+          const orders = params.package['lint-staged'][ruleKey];
+          // 判断如果是eslint，就在数组最前面拼接命令
+          if (isEslint) {
+            orders.unshift('eslint --fix');
+          }
+          // 判断prettierr
+          if (isPrettierr) {
+            orders.unshift('prettier --write');
+          }
+        }
+      }
+      // 如果二者都被选中，就需要eslint对prettierr进行扩充，调用eslint中暴露的一个函数
+      if (isEslint && isPrettierr) {
+        params.package = eslintConfigAddPrettierr(params).projectData;
+      }
     } catch (error) {
       reject(
         `处理用户选择的功能时出现了错误: ${error}; 请前往 https://github.com/seho-code-life/project_tool/issues/new 报告此错误; 但是这不影响你使用此模板，您可以自行删减功能`
       );
     }
-    resolve();
+    resolve(params.package);
   });
 };
 
 /**
- * @description 安装项目依赖
- * @param params
+ * @name 对项目进行install安装依赖操作
+ * @param {{ projectName: string }} params
  */
-const install = (params: { projectName: string }) => {
+const install = (params: { projectName: string }): void => {
   const { projectName } = params;
-  spinner.text = '正在安装依赖，如果您的网络情况较差，这可能是一杯茶的功夫';
+  spinner.text = '正在安装依赖...';
   // 执行install
   exec(`cd ${projectName} && npm i`, (error, stdout, stderr) => {
     if (error) {
@@ -114,10 +142,11 @@ const install = (params: { projectName: string }) => {
 };
 
 /**
- * @description 修改下载好的模板package.json 以及处理functions
- * @param params
+ * @name 修改package信息（包括调用了处理操作的函数）
+ * @description 修改版本号以及项目名称
+ * @param {{ projectName: string; functions: FunctionKeys[] }} params
  */
-const editPackageInfo = (params: { projectName: string; functions: FunctionKeys[] }) => {
+const editPackageInfo = (params: { projectName: string; functions: FunctionKeys[] }): void => {
   const { projectName, functions } = params;
   // 获取项目路径
   const path = `${process.cwd()}/${projectName}`;
@@ -125,12 +154,13 @@ const editPackageInfo = (params: { projectName: string; functions: FunctionKeys[
   fs.readFile(`${path}/package.json`, async (err, data) => {
     if (err) throw err;
     // 获取json数据并修改项目名称和版本号
-    const _data = JSON.parse(data.toString());
+    let _data = JSON.parse(data.toString());
     // 修改package的name名称
     _data.name = projectName;
     // 处理functions, 去在模板中做一些其他操作，比如删除几行依赖/删除几个文件
     try {
-      await handleFunctions({
+      // handleFunctions函数返回的_data就是处理过的package信息
+      _data = await handleFunctions({
         checkedfunctions: functions,
         package: _data,
         path
@@ -139,7 +169,7 @@ const editPackageInfo = (params: { projectName: string; functions: FunctionKeys[
       spinner.text = `${error}`;
       spinner.fail();
     }
-    const str = JSON.stringify(_data, null, 4);
+    const str = JSON.stringify(_data, null, 2);
     // 写入文件
     fs.writeFile(`${path}/package.json`, str, function (err) {
       if (err) throw err;
@@ -150,10 +180,10 @@ const editPackageInfo = (params: { projectName: string; functions: FunctionKeys[
 };
 
 /**
- * @description 下载模板
- * @param params
+ * @name 下载远端模板
+ * @param {{ repository: string; projectName: string; functions: FunctionKeys[] }} params
  */
-const downloadTemplate = (params: { repository: string; projectName: string; functions: FunctionKeys[] }) => {
+const downloadTemplate = (params: { repository: string; projectName: string; functions: FunctionKeys[] }): void => {
   const { repository, projectName, functions } = params;
   download(repository, projectName, (err) => {
     if (!err) {
@@ -207,7 +237,6 @@ type QuestionAnswers = {
 inquirer.prompt(questions).then((answers: QuestionAnswers) => {
   // 获取答案
   const { template: templateUrl, projectName, functions } = answers;
-  console.log(functions);
   spinner.start();
   spinner.color = 'green';
   // 开始下载模板

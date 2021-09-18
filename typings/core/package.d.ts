@@ -11,7 +11,7 @@ declare interface PackageData {
     serve: string;
     [propsName: string]: string;
   };
-  'lint-staged'?: Record<string, string | string[]>;
+  'lint-staged'?: Record<string, string[]>;
   dependencies: Record<string, string>;
   devDependencies: Record<string, string>;
 }

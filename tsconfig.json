@@ -11,6 +11,5 @@
     "forceConsistentCasingInFileNames": true,
     "typeRoots": ["./node_modules/@types", "./typings"]
   },
-  "include": ["./src/**/*"],
-  "exclude": ["src/template/**/*"]
+  "include": ["./src/**/*"]
 }

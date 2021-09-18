@@ -21,7 +21,6 @@ const copy = function (src: string, dst: string): void {
         if (err) {
           throw err;
         }
-        console.log(_src, st);
         // 判断是否为文件
         if (st.isFile()) {
           // 创建读取流
