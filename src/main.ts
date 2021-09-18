@@ -2,7 +2,6 @@
 
 // 命令行
 import { program } from 'commander';
-import fs from 'fs';
 
 // fs.readFileSync("../../package.json")
 // 输入-v， --version查看当前工具的版本

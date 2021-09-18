@@ -6,25 +6,125 @@ import fs from 'fs';
 import { exec } from 'child_process';
 import download from 'download-git-repo';
 import chalk from 'chalk';
+import handleEditor from './create/editor';
+import handleCommitHook from './create/commitHook';
+import handleEslint, { eslintConfigAddPrettierr } from './create/eslint';
+import handlePrettierr from './create/prettierr';
+import handleVscode from './create/vscode';
 
 const spinner = ora('下载模板中, 请稍后...');
 
-// 模板字典
+// 模板列表
 const template: { name: string; value: string }[] = [
   {
-    name: 'vue3-vite2-ts-template （ant-design-vue）模板文档: https://github.com/seho-code-life/project_template/tree/vue3-vite2-ts-template(release)',
-    value: 'seho-code-life/project_template#vue3-vite2-ts-template(release)'
+    name: 'vue3-vite2-ts-template （ant-design-vue）',
+    value: 'seho-code-life/project_template#base-template'
   },
   {
-    name: 'node-command-ts-template                 模板文档: https://github.com/seho-code-life/project_template/tree/node-command-cli',
+    name: 'node-command-ts-template',
     value: 'seho-code-life/project_template#node-command-cli'
   }
 ];
 
-// 安装项目依赖
-const install = (params: { projectName: string }) => {
+// 定义功能的key数组
+type FunctionKeys = 'editor' | 'commitHook' | 'eslint' | 'prettierr' | 'vscode';
+
+// function功能列表
+const functionsList: { name: string; value: FunctionKeys; checked: boolean }[] = [
+  {
+    name: 'editorconfig (统一IDE配置)',
+    value: 'editor',
+    checked: true
+  },
+  {
+    name: 'husky & lint-staged 基础GIT设施',
+    value: 'commitHook',
+    checked: true
+  },
+  {
+    name: 'eslint代码校验',
+    value: 'eslint',
+    checked: true
+  },
+  {
+    name: 'prettierr美化',
+    value: 'prettierr',
+    checked: true
+  },
+  {
+    name: 'vscode相关配置 (setting + code-snippets)',
+    value: 'vscode',
+    checked: false
+  }
+];
+
+// 功能列表的回调字典，内部函数处理了对package的读写&处理文件等操作
+const functionsCallBack: Record<FunctionKeys, (params: EditTemplate) => CreateFunctionRes> = {
+  editor: (params: EditTemplate) => handleEditor(params),
+  commitHook: (params: EditTemplate) => handleCommitHook(params),
+  eslint: (params: EditTemplate) => handleEslint(params),
+  prettierr: (params: EditTemplate) => handlePrettierr(params),
+  vscode: (params: EditTemplate) => handleVscode(params)
+};
+
+/**
+ * @name 处理对应操作的函数
+ * @description eslint, editor等等
+ * @param {({ checkedfunctions: FunctionKeys[] } & EditTemplate)} params
+ * @return {*}  {Promise<void>}
+ */
+const handleFunctions = (params: { checkedfunctions: FunctionKeys[] } & EditTemplate): Promise<PackageData> => {
+  const { checkedfunctions } = params;
+  return new Promise((resolve, reject) => {
+    // 执行对应的回调函数
+    try {
+      checkedfunctions.map((c) => {
+        params.package = functionsCallBack[c](params).projectData;
+      });
+      // 判断是否选择了eslint / prettierr
+      const isEslint = checkedfunctions.includes('eslint');
+      const isPrettierr = checkedfunctions.includes('prettierr');
+      // 处理函数中有一些部分比较复杂，比如lint和eslint的组合搭配，这部分我们单独写，就不归纳到处理函数字典里了
+      // 如果用户选择了commitHook，且要和eslint，prettierr搭配
+      if (checkedfunctions.includes('commitHook')) {
+        const ruleKey = '*.{vue,ts,tsx,js,jsx,json,markdown}';
+        // 如果选择了commithook，就初始化lint-stage的脚本, 默认我们拼接一个git add
+        params.package['lint-staged'] = {
+          [ruleKey]: ['git add']
+        };
+        if (isEslint || isPrettierr) {
+          // 这里的orders是一个数组，数组从头到尾是依次执行的命令
+          const orders = params.package['lint-staged'][ruleKey];
+          // 判断如果是eslint，就在数组最前面拼接命令
+          if (isEslint) {
+            orders.unshift('eslint --fix');
+          }
+          // 判断prettierr
+          if (isPrettierr) {
+            orders.unshift('prettier --write');
+          }
+        }
+      }
+      // 如果二者都被选中，就需要eslint对prettierr进行扩充，调用eslint中暴露的一个函数
+      if (isEslint && isPrettierr) {
+        params.package = eslintConfigAddPrettierr(params).projectData;
+      }
+    } catch (error) {
+      reject(
+        `处理用户选择的功能时出现了错误: ${error}; 请前往 https://github.com/seho-code-life/project_tool/issues/new 报告此错误; 但是这不影响你使用此模板，您可以自行删减功能`
+      );
+    }
+    resolve(params.package);
+  });
+};
+
+/**
+ * @name 对项目进行install安装依赖操作
+ * @param {{ projectName: string }} params
+ */
+const install = (params: { projectName: string }): void => {
   const { projectName } = params;
-  spinner.text = '正在安装依赖，如果您的网络情况较差，这可能是一杯茶的功夫';
+  spinner.text = '正在安装依赖...';
   // 执行install
   exec(`cd ${projectName} && npm i`, (error, stdout, stderr) => {
     if (error) {
@@ -41,19 +141,35 @@ const install = (params: { projectName: string }) => {
   });
 };
 
-// 修改下载好的模板package.json
-const editPackageInfo = (params: { projectName: string }) => {
-  const { projectName } = params;
+/**
+ * @name 修改package信息（包括调用了处理操作的函数）
+ * @description 修改版本号以及项目名称
+ * @param {{ projectName: string; functions: FunctionKeys[] }} params
+ */
+const editPackageInfo = (params: { projectName: string; functions: FunctionKeys[] }): void => {
+  const { projectName, functions } = params;
   // 获取项目路径
   const path = `${process.cwd()}/${projectName}`;
   // 读取项目中的packagejson文件
-  fs.readFile(`${path}/package.json`, (err, data) => {
+  fs.readFile(`${path}/package.json`, async (err, data) => {
     if (err) throw err;
     // 获取json数据并修改项目名称和版本号
-    const _data = JSON.parse(data.toString());
+    let _data = JSON.parse(data.toString());
     // 修改package的name名称
     _data.name = projectName;
-    const str = JSON.stringify(_data, null, 4);
+    // 处理functions, 去在模板中做一些其他操作，比如删除几行依赖/删除几个文件
+    try {
+      // handleFunctions函数返回的_data就是处理过的package信息
+      _data = await handleFunctions({
+        checkedfunctions: functions,
+        package: _data,
+        path
+      });
+    } catch (error) {
+      spinner.text = `${error}`;
+      spinner.fail();
+    }
+    const str = JSON.stringify(_data, null, 2);
     // 写入文件
     fs.writeFile(`${path}/package.json`, str, function (err) {
       if (err) throw err;
@@ -63,14 +179,16 @@ const editPackageInfo = (params: { projectName: string }) => {
   });
 };
 
-// 下载模板
-const downloadTemplate = (params: { repository: string; projectName: string }) => {
-  const { repository, projectName } = params;
+/**
+ * @name 下载远端模板
+ * @param {{ repository: string; projectName: string; functions: FunctionKeys[] }} params
+ */
+const downloadTemplate = (params: { repository: string; projectName: string; functions: FunctionKeys[] }): void => {
+  const { repository, projectName, functions } = params;
   download(repository, projectName, (err) => {
     if (!err) {
-      editPackageInfo({ projectName });
+      editPackageInfo({ projectName, functions });
     } else {
-      console.log(err);
       spinner.stop(); // 停止
       console.log(chalk.red('拉取模板出现未知错误'));
     }
@@ -101,17 +219,30 @@ const questions = [
     name: 'template',
     choices: template,
     message: '请选择要拉取的模板'
+  },
+  {
+    type: 'checkbox',
+    name: 'functions',
+    choices: functionsList,
+    message: '请选择默认安装的功能'
   }
 ];
 
-inquirer.prompt(questions).then((answers) => {
+type QuestionAnswers = {
+  template: string;
+  projectName: string;
+  functions: FunctionKeys[];
+};
+
+inquirer.prompt(questions).then((answers: QuestionAnswers) => {
   // 获取答案
-  const { template: templateUrl, projectName } = answers;
+  const { template: templateUrl, projectName, functions } = answers;
   spinner.start();
   spinner.color = 'green';
   // 开始下载模板
   downloadTemplate({
     repository: templateUrl,
-    projectName
+    projectName,
+    functions
   });
 });

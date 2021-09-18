@@ -1,8 +1,7 @@
 # enjoy-project-tool
 
 - [x] 创建项目模板，目前仅支持vue3,node-command
-- [ ] 自定义eslint,husky等安装选项
-
+- [x] 自定义eslint,husky,prettier等安装选项
 ## 命令
 
 | 命令       | 含义                                                    |

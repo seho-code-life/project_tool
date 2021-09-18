@@ -15,7 +15,7 @@ jobs:
         with:
           node-version: 12.13.0
       - name: 安装依赖以及编译
-        run: npm i && npx etsc
+        run: npm i && npm run build
       - name: 推送到NPM
         uses: JS-DevTools/npm-publish@v1
         with:

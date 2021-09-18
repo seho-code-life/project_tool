@@ -4,3 +4,4 @@ tsconfig.json
 nodemon.json
 typeings/
 .*
+dist/test/**/*
