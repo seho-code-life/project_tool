@@ -37,17 +37,17 @@ const functionsList: { name: string; value: FunctionKeys; checked: boolean }[] =
     checked: true
   },
   {
-    name: 'husky & lint-staged git提交钩子',
+    name: 'husky & lint-staged 基础GIT设施',
     value: 'commitHook',
     checked: true
   },
   {
-    name: 'eslint (如果已选择，那么git提交之前将会自动eslint)',
+    name: 'eslint代码校验',
     value: 'eslint',
     checked: true
   },
   {
-    name: 'prettierr (如果已选择，那么git提交之前将会自动prettierr)',
+    name: 'prettierr美化',
     value: 'prettierr',
     checked: true
   },
