@@ -17,11 +17,11 @@ const spinner = ora('下载模板中, 请稍后...');
 // 模板列表
 const template: { name: string; value: string }[] = [
   {
-    name: 'vue3-vite2-ts-template （ant-design-vue）模板文档: https://github.com/seho-code-life/project_template/tree/base-template',
+    name: 'vue3-vite2-ts-template （ant-design-vue）',
     value: 'seho-code-life/project_template#base-template'
   },
   {
-    name: 'node-command-ts-template                 模板文档: https://github.com/seho-code-life/project_template/tree/node-command-cli',
+    name: 'node-command-ts-template',
     value: 'seho-code-life/project_template#node-command-cli'
   }
 ];
@@ -175,7 +175,7 @@ const editPackageInfo = (params: { projectName: string; functions: FunctionKeys[
       if (err) throw err;
     });
     spinner.text = `下载完成, 正在自动安装项目依赖...`;
-    // install({ projectName });
+    install({ projectName });
   });
 };
 
