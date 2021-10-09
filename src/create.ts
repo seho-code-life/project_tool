@@ -17,12 +17,16 @@ const spinner = ora('下载模板中, 请稍后...');
 // 模板列表
 const template: { name: string; value: string }[] = [
   {
-    name: 'vue3-vite2-ts-template （ant-design-vue）',
+    name: 'vue3-vite2-ts-template',
     value: 'seho-code-life/project_template#base-template'
   },
   {
     name: 'node-command-ts-template',
     value: 'seho-code-life/project_template#node-command-cli'
+  },
+  {
+    name: 'rollup-typescript-package',
+    value: 'seho-code-life/project_template#rollup-typescript-package(release)'
   }
 ];
 
@@ -146,7 +150,7 @@ const install = (params: { projectName: string }): void => {
  * @description 修改版本号以及项目名称
  * @param {{ projectName: string; functions: FunctionKeys[] }} params
  */
-const editPackageInfo = (params: { projectName: string; functions: FunctionKeys[] }): void => {
+const editPackageInfo = (params: { projectName: string; functions?: FunctionKeys[] }): void => {
   const { projectName, functions } = params;
   // 获取项目路径
   const path = `${process.cwd()}/${projectName}`;
@@ -157,17 +161,19 @@ const editPackageInfo = (params: { projectName: string; functions: FunctionKeys[
     let _data = JSON.parse(data.toString());
     // 修改package的name名称
     _data.name = projectName;
-    // 处理functions, 去在模板中做一些其他操作，比如删除几行依赖/删除几个文件
-    try {
-      // handleFunctions函数返回的_data就是处理过的package信息
-      _data = await handleFunctions({
-        checkedfunctions: functions,
-        package: _data,
-        path
-      });
-    } catch (error) {
-      spinner.text = `${error}`;
-      spinner.fail();
+    if (functions) {
+      // 处理functions, 去在模板中做一些其他操作，比如删除几行依赖/删除几个文件
+      try {
+        // handleFunctions函数返回的_data就是处理过的package信息
+        _data = await handleFunctions({
+          checkedfunctions: functions,
+          package: _data,
+          path
+        });
+      } catch (error) {
+        spinner.text = `${error}`;
+        spinner.fail();
+      }
     }
     const str = JSON.stringify(_data, null, 2);
     // 写入文件
@@ -183,7 +189,7 @@ const editPackageInfo = (params: { projectName: string; functions: FunctionKeys[
  * @name 下载远端模板
  * @param {{ repository: string; projectName: string; functions: FunctionKeys[] }} params
  */
-const downloadTemplate = (params: { repository: string; projectName: string; functions: FunctionKeys[] }): void => {
+const downloadTemplate = (params: { repository: string; projectName: string; functions?: FunctionKeys[] }): void => {
   const { repository, projectName, functions } = params;
   download(repository, projectName, (err) => {
     if (!err) {
@@ -224,7 +230,11 @@ const questions = [
     type: 'checkbox',
     name: 'functions',
     choices: functionsList,
-    message: '请选择默认安装的功能'
+    message: '请选择默认安装的功能',
+    when: (answers: QuestionAnswers) => {
+      // 如果template是package的模板，就不让用户选择功能
+      return answers.template !== 'seho-code-life/project_template#rollup-typescript-package(release)';
+    }
   }
 ];
 
