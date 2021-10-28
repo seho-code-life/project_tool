@@ -1,11 +1,11 @@
 {
   "name": "enjoy-project-tool",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "",
   "main": "dist/main.js",
   "scripts": {
     "run": "nodemon",
-    "build": "npx etsc && cp -rv src/template dist/template",
+    "build": "npx etsc && cp -rv src/template dist",
     "lint": "eslint 'src/**/*' --fix",
     "prettier": "prettier --write '**/*.{ts,js,json,markdown}'",
     "lint-staged": "lint-staged",
