@@ -4,6 +4,10 @@
 
 - [x] 创建项目模板，目前支持vue3,node-command,rollup-package
 - [x] 自定义eslint,husky,prettier等安装选项
+
+## 特性
+
+- vue模板下载&安装国内提速（淘宝源⚡️）
 ## 命令
 
 | 命令       | 含义                                                    |
