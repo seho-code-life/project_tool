@@ -17,8 +17,8 @@ const main = (template: EditTemplate): CreateFunctionRes => {
     test: 'NODE_OPTIONS=--experimental-vm-modules jest'
   }
   // 将template中的jest内容拷贝到根目录
-  const rc = fs.readFileSync(path.resolve(__dirname, '..', 'template/jest/jest.config.mjs'))
-  fs.writeFileSync(path.resolve(template.path, 'jest.config.mjs'), rc)
+  const jest = fs.readFileSync(path.resolve(__dirname, '..', 'template/jest/jest.config.mjs'))
+  fs.writeFileSync(path.resolve(template.path, 'jest.config.mjs'), jest)
   return {
     projectData
   }
