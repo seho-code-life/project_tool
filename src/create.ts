@@ -12,14 +12,15 @@ import handleEslint, { eslintConfigAddPrettierr } from './create/eslint'
 import handlePrettierr from './create/prettierr'
 import handleVscode from './create/vscode'
 import handleJest from './create/jest'
+import packageData from '../package.json'
 
 const spinner = ora('下载模板中, 请稍后...')
 
 // 模板列表
 const template: { name: string; value: string }[] = [
   {
-    name: 'vue3-vite2-ts-template',
-    value: 'seho-code-life/project_template#base-template'
+    name: 'vue3-vite2-ts-template (⚡️淘宝源极速下载)',
+    value: `direct:https://github.com.cnpmjs.org/seho-code-life/project_template/archive/refs/tags/v${packageData.version}.zip`
   },
   {
     name: 'node-command-ts-template',
