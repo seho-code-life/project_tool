@@ -136,8 +136,8 @@ const handleFunctions = (params: { checkedfunctions: FunctionKeys[] } & EditTemp
 const install = (params: { projectName: string }): void => {
   const { projectName } = params
   spinner.text = '正在安装依赖...'
-  // 执行install
-  exec(`cd ${projectName} && npm i --registry https://registry.npm.taobao.org`, (error, stdout, stderr) => {
+  // 执行install, 且删除空文件夹中的gitkeep 占位文件
+  exec(`cd ${projectName} && npm i --registry https://registry.npm.taobao.org & find ./ -type f -name '.gitkeep' -delete`, (error, stdout, stderr) => {
     if (error) {
       console.error(`exec error: ${error}`)
       return
