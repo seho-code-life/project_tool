@@ -3,5 +3,4 @@ etsc.config.js
 tsconfig.json
 nodemon.json
 typeings/
-.*
 dist/test/**/*
