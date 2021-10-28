@@ -11,6 +11,8 @@ module.exports = {
   rules: {
     // 支持ts-ignore
     '@typescript-eslint/ban-ts-ignore': 'off',
-    '@typescript-eslint/no-var-requires': 0
+    '@typescript-eslint/no-var-requires': 0,
+    '@typescript-eslint/ban-ts-ignore': 'off',
+    '@typescript-eslint/explicit-module-boundary-types': 'off'
   }
-};
+}

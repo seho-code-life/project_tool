@@ -1,5 +1,5 @@
 declare interface CreateFunctionRes {
-  projectData: PackageData;
+  projectData: PackageData
 }
 
-declare type EditTemplate = { package: PackageData; path: string };
+declare type EditTemplate = { package: PackageData; path: string }

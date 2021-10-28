@@ -1,2 +1,2 @@
-import './create';
-import './package';
+import './create'
+import './package'

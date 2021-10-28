@@ -10,7 +10,8 @@ module.exports = {
   plugins: ['vue', '@typescript-eslint'],
   extends: ['plugin:vue/essential', 'eslint:recommended', 'plugin:@typescript-eslint/recommended'],
   rules: {
-    // 支持ts-ignore
-    '@typescript-eslint/ban-ts-ignore': 'off'
+    '@typescript-eslint/ban-ts-ignore': 'off',
+    '@typescript-eslint/explicit-module-boundary-types': 'off',
+    'no-undef': 'off'
   }
-};
+}
