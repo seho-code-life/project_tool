@@ -138,19 +138,25 @@ const install = (params: { projectName: string }): void => {
   const { projectName } = params
   spinner.text = '正在安装依赖...'
   // 执行install, 且删除空文件夹中的gitkeep 占位文件
-  exec(`cd ${projectName} && npm i --registry https://registry.npm.taobao.org & find ./ -type f -name '.gitkeep' -delete`, (error, stdout, stderr) => {
-    if (error) {
-      console.error(`exec error: ${error}`)
-      return
-    } else if (stdout) {
-      spinner.text = `安装成功, 进入${projectName}开始撸码～`
-      spinner.succeed()
-    } else {
-      spinner.text = `自动安装失败, 请查看错误，且之后自行安装依赖～`
-      spinner.fail()
-      console.error(stderr)
+  exec(
+    `cd ${projectName} && npm i --registry https://registry.npm.taobao.org & find ./ -type f -name '.gitkeep' -delete`,
+    {
+      maxBuffer: 5000 * 1024
+    },
+    (error, stdout, stderr) => {
+      if (error) {
+        console.error(`exec error: ${error}`)
+        return
+      } else if (stdout) {
+        spinner.text = `安装成功, 进入${projectName}开始撸码～`
+        spinner.succeed()
+      } else {
+        spinner.text = `自动安装失败, 请查看错误，且之后自行安装依赖～`
+        spinner.fail()
+        console.error(stderr)
+      }
     }
-  })
+  )
 }
 
 /**
