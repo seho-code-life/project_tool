@@ -15,8 +15,8 @@ const main = (template: EditTemplate): CreateFunctionRes => {
     prettier: "prettier --write '**/*.{vue,jsx,tsx,js,ts,json,md}'"
   }
   // 将template中的prettierr内容拷贝到根目录
-  const rc = fs.readFileSync(path.resolve(__dirname, '..', 'template/prettierr/.prettierrc'))
-  const ignore = fs.readFileSync(path.resolve(__dirname, '..', 'template/prettierr/.prettierignore'))
+  const rc = fs.readFileSync(path.resolve(__dirname, '..', 'template/prettier/.prettierrc'))
+  const ignore = fs.readFileSync(path.resolve(__dirname, '..', 'template/prettier/.prettierignore'))
   fs.writeFileSync(path.resolve(template.path, '.prettierrc'), rc)
   fs.writeFileSync(path.resolve(template.path, '.prettierignore'), ignore)
   return {
