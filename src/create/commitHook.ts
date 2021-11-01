@@ -5,9 +5,11 @@ import { exists } from '../util/file'
 
 const main = (template: EditTemplate): CreateFunctionRes => {
   const { package: projectData } = template
-  // 新增依赖/packagejson的配置项
+  // 新增依赖/packagejson的配置项&增加配置脚本
   projectData.scripts = {
     ...projectData.scripts,
+    lint: 'npm run lint:eslint && npm run lint:typescript',
+    'lint:eslint': "eslint 'src/**/*' --fix",
     prepare: 'husky install',
     'lint-staged': 'lint-staged'
   }

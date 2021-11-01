@@ -34,7 +34,7 @@ const main = (template: EditTemplate): CreateFunctionRes => {
  * @name 封装eslint配置添加prettierr配置
  * @description 封装如果选择了eslint和prettierr，需要添加对应的依赖，并且和原eslint进行兼容
  */
-export const eslintConfigAddPrettierr = (template: EditTemplate): CreateFunctionRes => {
+export const eslintConfigAddPrettier = (template: EditTemplate): CreateFunctionRes => {
   // 获取目标的path
   const { path: _path, package: projectData } = template
   // 获取eslintconfig

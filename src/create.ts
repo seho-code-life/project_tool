@@ -8,8 +8,8 @@ import download from 'download-git-repo'
 import chalk from 'chalk'
 import handleEditor from './create/editor'
 import handleCommitHook from './create/commitHook'
-import handleEslint, { eslintConfigAddPrettierr } from './create/eslint'
-import handlePrettierr from './create/prettierr'
+import handleEslint, { eslintConfigAddPrettier } from './create/eslint'
+import handlePrettier from './create/prettier'
 import handleVscode from './create/vscode'
 import handleJest from './create/jest'
 import packageData from '../package.json'
@@ -33,7 +33,7 @@ const template: { name: string; value: string }[] = [
 ]
 
 // 定义功能的key数组
-type FunctionKeys = 'editor' | 'commitHook' | 'eslint' | 'prettierr' | 'vscode' | 'jest'
+type FunctionKeys = 'editor' | 'commitHook' | 'eslint' | 'prettier' | 'vscode' | 'jest'
 
 // function功能列表
 const functionsList: { name: string; value: FunctionKeys; checked: boolean }[] = [
@@ -53,8 +53,8 @@ const functionsList: { name: string; value: FunctionKeys; checked: boolean }[] =
     checked: true
   },
   {
-    name: 'prettierr美化',
-    value: 'prettierr',
+    name: 'prettier美化',
+    value: 'prettier',
     checked: true
   },
   {
@@ -74,7 +74,7 @@ const functionsCallBack: Record<FunctionKeys, (params: EditTemplate) => CreateFu
   editor: (params: EditTemplate) => handleEditor(params),
   commitHook: (params: EditTemplate) => handleCommitHook(params),
   eslint: (params: EditTemplate) => handleEslint(params),
-  prettierr: (params: EditTemplate) => handlePrettierr(params),
+  prettier: (params: EditTemplate) => handlePrettier(params),
   vscode: (params: EditTemplate) => handleVscode(params),
   jest: (params: EditTemplate) => handleJest(params)
 }
@@ -93,33 +93,42 @@ const handleFunctions = (params: { checkedfunctions: FunctionKeys[] } & EditTemp
       checkedfunctions.map((c) => {
         params.package = functionsCallBack[c](params).projectData
       })
-      // 判断是否选择了eslint / prettierr
+      // 判断是否选择了eslint / prettier
       const isEslint = checkedfunctions.includes('eslint')
-      const isPrettierr = checkedfunctions.includes('prettierr')
+      const isPrettier = checkedfunctions.includes('prettier')
       // 处理函数中有一些部分比较复杂，比如lint和eslint的组合搭配，这部分我们单独写，就不归纳到处理函数字典里了
-      // 如果用户选择了commitHook，且要和eslint，prettierr搭配
+      // 如果用户选择了commitHook，且要和eslint，prettier搭配
       if (checkedfunctions.includes('commitHook')) {
-        const ruleKey = '*.{vue,ts,tsx,js,jsx,json,markdown}'
         // 如果选择了commithook，就初始化lint-stage的脚本, 默认我们拼接一个git add
         params.package['lint-staged'] = {
-          [ruleKey]: ['git add']
+          '*.{ts,tsx}': ['tsc --noEmit --pretty false --skipLibCheck', 'git add'],
+          '*.{json,js,jsx}': ['git add'],
+          '*.vue': ['vue-tsc --noEmit --skipLibCheck', 'git add']
         }
-        if (isEslint || isPrettierr) {
+        if (isEslint || isPrettier) {
           // 这里的orders是一个数组，数组从头到尾是依次执行的命令
-          const orders = params.package['lint-staged'][ruleKey]
+          const ts_orders = params.package['lint-staged']['*.{ts,tsx}']
+          const js_orders = params.package['lint-staged']['*.{json,js,jsx}']
+          const vue_orders = params.package['lint-staged']['*.vue']
           // 判断如果是eslint，就在数组最前面拼接命令
           if (isEslint) {
-            orders.unshift('eslint --fix')
+            const code = 'eslint --fix'
+            ts_orders.unshift(code)
+            js_orders.unshift(code)
+            vue_orders.unshift(code)
           }
-          // 判断prettierr
-          if (isPrettierr) {
-            orders.unshift('prettier --write')
+          // 判断prettier
+          if (isPrettier) {
+            const code = 'prettier --write'
+            ts_orders.unshift(code)
+            js_orders.unshift(code)
+            vue_orders.unshift(code)
           }
         }
       }
-      // 如果二者都被选中，就需要eslint对prettierr进行扩充，调用eslint中暴露的一个函数
-      if (isEslint && isPrettierr) {
-        params.package = eslintConfigAddPrettierr(params).projectData
+      // 如果二者都被选中，就需要eslint对prettier进行扩充，调用eslint中暴露的一个函数
+      if (isEslint && isPrettier) {
+        params.package = eslintConfigAddPrettier(params).projectData
       }
     } catch (error) {
       reject(
@@ -148,7 +157,6 @@ const install = (params: { projectName: string }): void => {
         spinner.text = `自动安装失败, 请查看错误，且之后自行安装依赖～`
         spinner.fail()
         console.error(stderr)
-        return
       } else if (stdout) {
         spinner.text = `安装成功, 进入${projectName}开始撸码～`
         spinner.succeed()
