@@ -6,21 +6,22 @@ import fs from 'fs'
 import { exec } from 'child_process'
 import download from 'download-git-repo'
 import chalk from 'chalk'
+import { getReleaseList, getLatestRelease, CDN_URL } from './util/github'
 import handleEditor from './create/editor'
 import handleCommitHook from './create/commitHook'
 import handleEslint, { eslintConfigAddPrettier } from './create/eslint'
 import handlePrettier from './create/prettier'
 import handleVscode from './create/vscode'
 import handleJest from './create/jest'
-import packageData from '../package.json'
 
-const spinner = ora('下载模板中, 请稍后...')
+const spinner = ora()
+spinner.color = 'green'
 
 // 模板列表
 const template: { name: string; value: string }[] = [
   {
-    name: 'vue3-vite2-ts-template (⚡️淘宝源极速下载)',
-    value: `direct:https://github.com.cnpmjs.org/seho-code-life/project_template/archive/refs/tags/v${packageData.version}.zip`
+    name: 'vue3-vite2-ts-template (⚡️极速下载)',
+    value: `direct:${CDN_URL}/https://github.com/seho-code-life/project_template/archive/refs/tags/`
   },
   {
     name: 'node-command-ts-template',
@@ -226,7 +227,7 @@ const questions = [
   {
     type: 'input',
     name: 'projectName',
-    message: '项目文件夹名称:',
+    message: '项目文件夹名称',
     validate(val?: string) {
       if (!val) {
         // 验证一下输入是否正确
@@ -247,6 +248,48 @@ const questions = [
     message: '请选择要拉取的模板'
   },
   {
+    type: 'list',
+    name: 'template-version',
+    choices: async () => {
+      const result = await getLatestRelease()
+      return [
+        {
+          name: `默认最新版（LATEST）`,
+          value: `${result.version}`
+        },
+        {
+          name: `自定义版本`,
+          value: `other`
+        }
+      ]
+    },
+    message: '请选择模板的版本 (默认latest)',
+    when: (answers: QuestionAnswers) => {
+      // 如果template是package的模板，就不让用户选择功能
+      return answers.template !== 'seho-code-life/project_template#rollup-typescript-package(release)'
+    }
+  },
+  {
+    type: 'list',
+    name: 'version',
+    choices: async () => {
+      spinner.start('正在从远端获取版本列表...')
+      const result = await getReleaseList()
+      spinner.stop()
+      process.stdin.resume()
+      return result.list.map((l) => {
+        return {
+          name: `${l.tag_name} | 更新时间${l.created_at} ｜ 查看详情(${l.html_url})`,
+          value: `${l.tag_name}`
+        }
+      })
+    },
+    message: '自定义版本',
+    when: (answers: QuestionAnswers) => {
+      return answers['template-version'] === 'other'
+    }
+  },
+  {
     type: 'checkbox',
     name: 'functions',
     choices: functionsList,
@@ -262,13 +305,21 @@ type QuestionAnswers = {
   template: string
   projectName: string
   functions: FunctionKeys[]
+  'template-version': string | 'other'
+  version: string
 }
 
+// 获取基础模板的release列表
 inquirer.prompt(questions).then((answers: QuestionAnswers) => {
   // 获取答案
-  const { template: templateUrl, projectName, functions } = answers
-  spinner.start()
-  spinner.color = 'green'
+  // eslint-disable-next-line prefer-const
+  let { template: templateUrl, projectName, functions, version } = answers
+  // 处理templateUrl
+  if (templateUrl.includes('direct')) {
+    // 向templateUrl后面拼接版本号+zip格式
+    templateUrl += `${version}.zip`
+  }
+  spinner.start('下载模板中, 请稍后...')
   // 开始下载模板
   downloadTemplate({
     repository: templateUrl,
