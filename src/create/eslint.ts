@@ -8,7 +8,8 @@ const main = (template: EditTemplate): CreateFunctionRes => {
   // 添加script
   projectData.scripts = {
     ...projectData.scripts,
-    lint: "eslint 'src/**/*' --fix"
+    lint: 'concurrently "npm:lint:eslint" "npm:lint:typescript"',
+    'lint:eslint': "eslint 'src/**/*' --fix"
   }
   // 添加开发依赖
   projectData.devDependencies = {

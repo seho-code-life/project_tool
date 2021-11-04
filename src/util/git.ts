@@ -1,6 +1,7 @@
 import flying from 'flyio'
 import randomUseragent from 'random-useragent'
-import { format } from '../util/time'
+import { format } from './time'
+import { hasProjectGit } from './index'
 
 export interface GithubAPIReleaseData {
   html_url: string
@@ -20,6 +21,7 @@ export interface APIReleaseData {
 export const CDN_URL = 'http://github.cdn.yinzhuoei.com'
 export const API_URL = 'http://github.api.yinzhuoei.com'
 export const GITHUB_API_URL = 'https://api.github.com'
+export const CNPM_URL = 'https://registry.npm.taobao.org'
 
 /**
  * @name 通过github-api获取release列表

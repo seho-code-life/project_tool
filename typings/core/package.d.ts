@@ -14,4 +14,5 @@ declare interface PackageData {
   'lint-staged'?: Record<'*.{ts,tsx}' | '*.{json,js,jsx}' | '*.vue', string[]>
   dependencies: Record<string, string>
   devDependencies: Record<string, string>
+  [key: string]: string | Record<string, string> | Record<string, string[]> | undefined
 }

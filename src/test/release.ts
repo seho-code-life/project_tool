@@ -1,3 +1,3 @@
-import { getReleaseList, getLatestRelease } from '../util/github'
+import { getReleaseList, getLatestRelease } from '../util/git'
 
 getLatestRelease()
