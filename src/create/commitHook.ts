@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import path from 'path'
+import fs from 'fs'
 import { exists } from '../util/file'
 
 const main = (template: EditTemplate): CreateFunctionRes => {
@@ -23,23 +24,23 @@ const main = (template: EditTemplate): CreateFunctionRes => {
 }
 
 /**
- * @name 初始化lintstage命令
- * @description 根据条件动态的构造出一个正确的lintstage拦截命令
+ * @name 初始化lintstage规则文件
+ * @description 根据条件动态的构造出一组正确的lintstage拦截命令
  * @param {{ isEslint: boolean; isPrettier: boolean; packageData: PackageData }} params
  */
-export const initLintStage = (params: { isEslint: boolean; isPrettier: boolean; package: PackageData }) => {
-  const { isEslint, isPrettier } = params
-  // 如果选择了commithook，就初始化lint-stage的脚本, 默认我们拼接一个git add
-  params.package['lint-staged'] = {
-    '*.{ts,tsx}': ['tsc --noEmit --pretty false --skipLibCheck', 'git add'],
-    '*.{json,js,jsx}': ['git add'],
-    '*.vue': ['vue-tsc --noEmit --skipLibCheck', 'git add']
+export const initLintStage = (params: { isEslint: boolean; isPrettier: boolean; path: string }) => {
+  const { isEslint, isPrettier, path } = params
+  // 初始化lint_stage 命令
+  const lint_stage: Record<'*.{ts,tsx}' | '*.vue' | '*.{json,js,jsx}', string[]> = {
+    '*.{ts,tsx}': ['tsc --noEmit'],
+    '*.vue': ['vue-tsc --noEmit'],
+    '*.{json,js,jsx}': []
   }
   if (isEslint || isPrettier) {
     // 这里的orders是一个数组，数组从头到尾是依次执行的命令
-    const ts_orders = params.package['lint-staged']['*.{ts,tsx}']
-    const js_orders = params.package['lint-staged']['*.{json,js,jsx}']
-    const vue_orders = params.package['lint-staged']['*.vue']
+    const ts_orders = lint_stage['*.{ts,tsx}']
+    const vue_orders = lint_stage['*.vue']
+    const js_orders = lint_stage['*.{json,js,jsx}']
     // 判断如果是eslint，就在数组最前面拼接命令
     if (isEslint) {
       const code = 'eslint --fix'
@@ -55,7 +56,8 @@ export const initLintStage = (params: { isEslint: boolean; isPrettier: boolean; 
       vue_orders.unshift(code)
     }
   }
-  return params.package
+  // 将命令输出到lint-staged.config.js中
+  fs.writeFileSync(`${path}/lint-staged.config.js`, `module.exports = ${JSON.stringify(lint_stage)}`)
 }
 
 export default main

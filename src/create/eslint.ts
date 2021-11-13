@@ -40,7 +40,7 @@ export const eslintConfigAddPrettier = (template: EditTemplate): CreateFunctionR
   const { path: _path, package: projectData } = template
   // 获取eslintconfig
   let eslintConfigStr = fs.readFileSync(path.resolve(_path, '.eslintrc.js')).toString()
-  // 查询模板中的代码，以此代码作为flag，因为这段兼容性代码，确实是要加在这段代码（flagCode）的下方
+  // 查询模板中的代码，以此代码作为flag，因为这段兼容性代码，是要加在这段代码（flagCode）的下方
   const flagCode = "'plugin:@typescript-eslint/recommended'"
   eslintConfigStr = eslintConfigStr.replace(flagCode, `${flagCode},\n    'plugin:prettier/recommended'`)
   //写入文件

@@ -81,45 +81,6 @@ const functionsCallBack: Record<FunctionKeys, (params: EditTemplate) => CreateFu
   jest: (params: EditTemplate) => handleJest(params)
 }
 
-/**
- * @name 处理对应操作的函数
- * @description eslint, editor等等
- * @param {({ checkedfunctions: FunctionKeys[] } & EditTemplate)} params
- * @return {*}  {Promise<void>}
- */
-const handleFunctions = (params: { checkedfunctions: FunctionKeys[] } & EditTemplate): Promise<PackageData> => {
-  const { checkedfunctions } = params
-  return new Promise((resolve, reject) => {
-    // 执行对应的回调函数
-    try {
-      checkedfunctions.map((c) => {
-        params.package = functionsCallBack[c](params).projectData
-      })
-      // 判断是否选择了eslint / prettier
-      const isEslint = checkedfunctions.includes('eslint')
-      const isPrettier = checkedfunctions.includes('prettier')
-      // 处理函数中有一些部分比较复杂，比如lint和eslint的组合搭配，这部分我们封装到commithook钩子里面
-      // 如果用户选择了commitHook，且要和eslint，prettier搭配
-      if (checkedfunctions.includes('commitHook')) {
-        initLintStage({
-          package: params.package,
-          isPrettier,
-          isEslint
-        })
-      }
-      // 如果二者都被选中，就需要eslint对prettier进行扩充，调用eslint中暴露的一个函数
-      if (isEslint && isPrettier) {
-        params.package = eslintConfigAddPrettier(params).projectData
-      }
-    } catch (error) {
-      reject(
-        `处理用户选择的功能时出现了错误: ${error}; 请前往 https://github.com/seho-code-life/project_tool/issues/new 报告此错误; 但是这不影响你使用此模板，您可以自行删减功能`
-      )
-    }
-    resolve(params.package)
-  })
-}
-
 // 定义问题列表
 const questions = [
   {
@@ -270,7 +231,7 @@ const sortPkg = (pkg: PackageData) => {
     'test',
     'serve'
   ])
-  pkg = sortObject(pkg, ['version', 'name', 'scripts', 'lint-staged', 'dependencies', 'devDependencies'])
+  pkg = sortObject(pkg, ['version', 'name', 'scripts', 'dependencies', 'devDependencies'])
   return pkg
 }
 
@@ -315,6 +276,45 @@ const editPackageInfo = (params: { projectName: string; functions?: FunctionKeys
 }
 
 /**
+ * @name 处理对应操作的函数
+ * @description eslint, editor等等
+ * @param {({ checkedfunctions: FunctionKeys[] } & EditTemplate)} params
+ * @return {*}  {Promise<void>}
+ */
+const handleFunctions = (params: { checkedfunctions: FunctionKeys[]; path: string } & EditTemplate): Promise<PackageData> => {
+  const { checkedfunctions, path } = params
+  return new Promise((resolve, reject) => {
+    // 执行对应的回调函数
+    try {
+      checkedfunctions.map((c) => {
+        params.package = functionsCallBack[c](params).projectData
+      })
+      // 判断是否选择了eslint / prettier
+      const isEslint = checkedfunctions.includes('eslint')
+      const isPrettier = checkedfunctions.includes('prettier')
+      // 处理函数中有一些部分比较复杂，比如lint和eslint的组合搭配，这部分我们封装到commithook钩子里面
+      // 如果用户选择了commitHook，且要和eslint，prettier搭配
+      if (checkedfunctions.includes('commitHook')) {
+        initLintStage({
+          isPrettier,
+          isEslint,
+          path
+        })
+      }
+      // 如果二者都被选中，就需要eslint对prettier进行扩充，调用eslint中暴露的一个函数
+      if (isEslint && isPrettier) {
+        params.package = eslintConfigAddPrettier(params).projectData
+      }
+    } catch (error) {
+      reject(
+        `处理用户选择的功能时出现了错误: ${error}; 请前往 https://github.com/seho-code-life/project_tool/issues/new 报告此错误; 但是这不影响你使用此模板，您可以自行删减功能`
+      )
+    }
+    resolve(params.package)
+  })
+}
+
+/**
  * @name 对项目进行install安装依赖操作
  * @param {{ projectName: string, functions?: FunctionKeys[]}} params
  */
@@ -322,7 +322,7 @@ const install = async (params: { projectName: string; functions?: FunctionKeys[]
   const { projectName, functions } = params
   const cwd = `${process.cwd()}/${projectName}`
   spinner.text = '🤔 自动安装&初始化项目中...'
-  // 执行install
+  // 执行install
   // 删除空文件夹中的gitkeep 占位文件
   // 初始化git
   // 如果用户选择了拦截钩子，就初始化husky pre commit
