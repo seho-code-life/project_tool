@@ -6,70 +6,62 @@ import fs from 'fs'
 import download from 'download-git-repo'
 import concurrently from 'concurrently'
 import chalk from 'chalk'
-import { getReleaseList, getLatestRelease, CDN_URL, CNPM_URL } from './util/git'
-import { hasProjectGit, sortObject } from './util/index'
+import { CNPM_URL } from './util/git'
+import { hasProjectGit, sortPkg } from './util/index'
 import handleEditor from './create/editor'
 import handleCommitHook, { initLintStage } from './create/commitHook'
 import handleEslint, { eslintConfigAddPrettier } from './create/eslint'
 import handlePrettier from './create/prettier'
 import handleVscode from './create/vscode'
 import handleJest from './create/jest'
+import handleUIComponents from './create/uiComponents'
+import { questions, FunctionKeys, QuestionAnswers } from './create/index'
 
 const spinner = ora()
 spinner.color = 'green'
 
-// 定义功能的key数组
-type FunctionKeys = 'editor' | 'commitHook' | 'eslint' | 'prettier' | 'vscode' | 'jest'
+// 答案内容
+let _answers: QuestionAnswers | null = null
+// 项目路径
+let _projectPath = ''
 
-// 模板列表
-const template: { name: string; value: string }[] = [
-  {
-    name: 'vue3-vite2-ts-template (⚡️极速下载)',
-    value: `direct:${CDN_URL}/https://github.com/seho-code-life/project_template/archive/refs/tags/`
-  },
-  {
-    name: 'node-command-ts-template',
-    value: 'seho-code-life/project_template#node-command-cli'
-  },
-  {
-    name: 'rollup-typescript-package',
-    value: 'seho-code-life/project_template#rollup-typescript-package(release)'
+// 获取基础模板的release列表
+inquirer.prompt(questions).then((answers: QuestionAnswers) => {
+  // 获取答案, 把答案的内容赋值给全局
+  _answers = answers
+  // eslint-disable-next-line prefer-const
+  let { template: templateUrl, projectName, version } = answers
+  // 根据项目名称得到项目根路径
+  _projectPath = `${process.cwd()}/${projectName}`
+  // 处理templateUrl
+  if (templateUrl.includes('direct')) {
+    // 向templateUrl后面拼接版本号+zip格式
+    // 如果是自定义版本就使用version值，如果用户选择了最新版本，就直接使用template-version（最新版本的版本值）
+    templateUrl += `${answers['template-version'] === 'other' ? version : answers['template-version']}.zip`
   }
-]
+  spinner.start('下载模板中, 请稍后...')
+  // 开始下载模板
+  downloadTemplate({
+    repository: templateUrl
+  })
+})
 
-// function功能列表
-const functionsList: { name: string; value: FunctionKeys; checked: boolean }[] = [
-  {
-    name: 'editorconfig (统一IDE配置)',
-    value: 'editor',
-    checked: true
-  },
-  {
-    name: 'husky & lint-staged 基础GIT设施',
-    value: 'commitHook',
-    checked: true
-  },
-  {
-    name: 'eslint代码校验',
-    value: 'eslint',
-    checked: true
-  },
-  {
-    name: 'prettier美化',
-    value: 'prettier',
-    checked: true
-  },
-  {
-    name: 'jest单元测试',
-    value: 'jest',
-    checked: true
-  },
-  {
-    name: 'vscode相关配置 (setting + code-snippets)',
-    value: 'vscode',
-    checked: false
-  }
-]
+/**
+ * @name 下载远端模板
+ * @param {{ repository: string; }} params
+ */
+const downloadTemplate = (params: { repository: string }): void => {
+  const { repository } = params
+  download(repository, _answers?.projectName as string, (err) => {
+    if (!err) {
+      editPackageInfo()
+    } else {
+      console.log(err)
+      spinner.stop() // 停止
+      console.log(chalk.red('拉取模板出现未知错误'))
+    }
+  })
+}
 
 // 功能列表的回调字典，内部函数处理了对package的读写&处理文件等操作
 const functionsCallBack: Record<FunctionKeys, (params: EditTemplate) => CreateFunctionRes> = {
@@ -81,213 +73,20 @@ const functionsCallBack: Record<FunctionKeys, (params: EditTemplate) => CreateFu
   jest: (params: EditTemplate) => handleJest(params)
 }
 
-// 定义问题列表
-const questions = [
-  {
-    type: 'input',
-    name: 'projectName',
-    message: '项目文件夹名称',
-    validate(val?: string) {
-      if (!val) {
-        // 验证一下输入是否正确
-        return '请输入文件名'
-      }
-      if (fs.existsSync(val)) {
-        // 判断文件是否存在
-        return '文件已存在'
-      } else {
-        return true
-      }
-    }
-  },
-  {
-    type: 'list',
-    name: 'template',
-    choices: template,
-    message: '请选择要拉取的模板'
-  },
-  {
-    type: 'list',
-    name: 'template-version',
-    choices: async () => {
-      spinner.start('')
-      const result = await getLatestRelease()
-      spinner.stop()
-      process.stdin.resume()
-      return [
-        {
-          name: `默认最新版`,
-          value: `${result.version}`
-        },
-        {
-          name: `自定义版本`,
-          value: `other`
-        }
-      ]
-    },
-    message: '请选择模板的版本',
-    when: (answers: QuestionAnswers) => {
-      // 如果template是package的模板，就不让用户选择功能
-      return answers.template !== 'seho-code-life/project_template#rollup-typescript-package(release)'
-    }
-  },
-  {
-    type: 'list',
-    name: 'version',
-    choices: async () => {
-      spinner.start('正在从远端获取版本列表...')
-      const result = await getReleaseList()
-      spinner.stop()
-      process.stdin.resume()
-      return result.list.map((l) => {
-        return {
-          name: `${l.tag_name} | 更新时间${l.created_at} ｜ 查看详情(${l.html_url})`,
-          value: `${l.tag_name}`
-        }
-      })
-    },
-    message: '自定义版本',
-    when: (answers: QuestionAnswers) => {
-      return answers['template-version'] === 'other'
-    }
-  },
-  {
-    type: 'checkbox',
-    name: 'functions',
-    choices: functionsList,
-    message: '请选择默认安装的功能',
-    when: (answers: QuestionAnswers) => {
-      // 如果template是package的模板，就不让用户选择功能
-      return answers.template !== 'seho-code-life/project_template#rollup-typescript-package(release)'
-    }
-  }
-]
-
-type QuestionAnswers = {
-  template: string
-  projectName: string
-  functions: FunctionKeys[]
-  'template-version': string | 'other'
-  version: string
-}
-
-// 获取基础模板的release列表
-inquirer.prompt(questions).then((answers: QuestionAnswers) => {
-  // 获取答案
-  // eslint-disable-next-line prefer-const
-  let { template: templateUrl, projectName, functions, version } = answers
-  // 处理templateUrl
-  if (templateUrl.includes('direct')) {
-    // 向templateUrl后面拼接版本号+zip格式
-    templateUrl += `${answers['template-version'] || version}.zip`
-  }
-  spinner.start('下载模板中, 请稍后...')
-  // 开始下载模板
-  downloadTemplate({
-    repository: templateUrl,
-    projectName,
-    functions
-  })
-})
-
-/**
- * @name 下载远端模板
- * @param {{ repository: string; projectName: string; functions: FunctionKeys[] }} params
- */
-const downloadTemplate = (params: { repository: string; projectName: string; functions?: FunctionKeys[] }): void => {
-  const { repository, projectName, functions } = params
-  download(repository, projectName, (err) => {
-    if (!err) {
-      editPackageInfo({ projectName, functions })
-    } else {
-      console.log(err)
-      spinner.stop() // 停止
-      console.log(chalk.red('拉取模板出现未知错误'))
-    }
-  })
-}
-
-/**
- * @name 给packagejson排序
- * @param {PackageData} pkg
- * @return {*}
- */
-const sortPkg = (pkg: PackageData) => {
-  pkg.dependencies = sortObject(pkg.dependencies)
-  pkg.devDependencies = sortObject(pkg.devDependencies)
-  pkg.scripts = sortObject(pkg.scripts, [
-    'dev',
-    'dev:test',
-    'dev:prod',
-    'lint',
-    'lint:eslint',
-    'lint:typescript',
-    'prettier',
-    'prepare',
-    'lint-staged',
-    'build',
-    'build:test',
-    'build:prod',
-    'test',
-    'serve'
-  ])
-  pkg = sortObject(pkg, ['version', 'name', 'scripts', 'dependencies', 'devDependencies'])
-  return pkg
-}
-
-/**
- * @name 修改package信息（包括调用了处理操作的函数）
- * @description 修改版本号以及项目名称
- * @param {{ projectName: string; functions: FunctionKeys[] }} params
- */
-const editPackageInfo = (params: { projectName: string; functions?: FunctionKeys[] }): void => {
-  const { projectName, functions } = params
-  // 获取项目路径
-  const path = `${process.cwd()}/${projectName}`
-  // 读取项目中的packagejson文件
-  fs.readFile(`${path}/package.json`, async (err, data) => {
-    if (err) throw err
-    // 获取json数据并修改项目名称和版本号
-    let _data = JSON.parse(data.toString())
-    // 修改package的name名称
-    _data.name = projectName
-    if (functions) {
-      // 处理functions, 去在模板中做一些其他操作，比如删除几行依赖/删除几个文件
-      try {
-        // handleFunctions函数返回的_data就是处理过的package信息
-        _data = await handleFunctions({
-          checkedfunctions: functions,
-          package: _data,
-          path
-        })
-      } catch (error) {
-        spinner.text = `${error}`
-        spinner.fail()
-      }
-    }
-    const str = JSON.stringify(sortPkg(_data), null, 2)
-    // 写入文件
-    fs.writeFile(`${path}/package.json`, str, function (err) {
-      if (err) throw err
-      spinner.text = `下载完成, 正在自动安装项目依赖...`
-      install({ projectName, functions })
-    })
-  })
-}
-
 /**
  * @name 处理对应操作的函数
  * @description eslint, editor等等
- * @param {({ checkedfunctions: FunctionKeys[] } & EditTemplate)} params
+ * @param {{ package: PackageData }} params
  * @return {*}  {Promise<void>}
  */
-const handleFunctions = (params: { checkedfunctions: FunctionKeys[]; path: string } & EditTemplate): Promise<PackageData> => {
-  const { checkedfunctions, path } = params
+
+const handleFunctions = (params: { package: PackageData }): Promise<PackageData> => {
+  const { functions: checkedfunctions } = _answers as QuestionAnswers
   return new Promise((resolve, reject) => {
     // 执行对应的回调函数
     try {
       checkedfunctions.map((c) => {
-        params.package = functionsCallBack[c](params).projectData
+        params.package = functionsCallBack[c]({ ...params, path: _projectPath }).projectData
       })
       // 判断是否选择了eslint / prettier
       const isEslint = checkedfunctions.includes('eslint')
@@ -298,13 +97,19 @@ const handleFunctions = (params: { checkedfunctions: FunctionKeys[]; path: strin
         initLintStage({
           isPrettier,
           isEslint,
-          path
+          path: _projectPath
         })
       }
       // 如果二者都被选中，就需要eslint对prettier进行扩充，调用eslint中暴露的一个函数
       if (isEslint && isPrettier) {
-        params.package = eslintConfigAddPrettier(params).projectData
+        params.package = eslintConfigAddPrettier({ ...params, path: _projectPath }).projectData
       }
+      // 执行uiComponents的逻辑，函数会动态根据用户选择的ui框架返回正确的依赖选项（package.json）
+      params.package = handleUIComponents({
+        package: params.package,
+        path: _projectPath,
+        name: _answers!.uiComponents
+      })
     } catch (error) {
       reject(
         `处理用户选择的功能时出现了错误: ${error}; 请前往 https://github.com/seho-code-life/project_tool/issues/new 报告此错误; 但是这不影响你使用此模板，您可以自行删减功能`
@@ -315,11 +120,45 @@ const handleFunctions = (params: { checkedfunctions: FunctionKeys[]; path: strin
 }
 
 /**
- * @name 对项目进行install安装依赖操作
- * @param {{ projectName: string, functions?: FunctionKeys[]}} params
+ * @name 修改package信息（包括调用了处理操作的函数）
+ * @description 修改版本号以及项目名称
  */
-const install = async (params: { projectName: string; functions?: FunctionKeys[] }) => {
-  const { projectName, functions } = params
+const editPackageInfo = (): void => {
+  const { functions } = _answers as QuestionAnswers
+  // 读取项目中的packagejson文件
+  fs.readFile(`${_projectPath}/package.json`, async (err, data) => {
+    if (err) throw err
+    // 获取json数据并修改项目名称和版本号
+    let _data = JSON.parse(data.toString())
+    // 修改package的name名称
+    _data.name = _answers?.projectName
+    if (functions) {
+      // 处理functions, 去在模板中做一些其他操作，比如删除几行依赖/删除几个文件
+      try {
+        // handleFunctions函数返回的_data就是处理过的package信息
+        _data = await handleFunctions({
+          package: _data
+        })
+      } catch (error) {
+        spinner.text = `${error}`
+        spinner.fail()
+      }
+    }
+    const str = JSON.stringify(sortPkg(_data), null, 2)
+    // 写入文件
+    fs.writeFile(`${_projectPath}/package.json`, str, function (err) {
+      if (err) throw err
+      spinner.text = `下载完成, 正在自动安装项目依赖...`
+      install()
+    })
+  })
+}
+
+/**
+ * @name 对项目进行install安装依赖操作
+ */
+const install = async () => {
+  const { projectName, functions } = _answers as QuestionAnswers
   const cwd = `${process.cwd()}/${projectName}`
   spinner.text = '🤔 自动安装&初始化项目中...'
   // 执行install

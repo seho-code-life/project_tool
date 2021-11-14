@@ -74,3 +74,31 @@ export const sortObject = <T extends Record<string, any>>(obj: T, keyOrder?: str
 
   return res as T
 }
+
+/**
+ * @name 给packagejson排序
+ * @param {PackageData} pkg
+ * @return {*}
+ */
+export const sortPkg = (pkg: PackageData) => {
+  pkg.dependencies = sortObject(pkg.dependencies)
+  pkg.devDependencies = sortObject(pkg.devDependencies)
+  pkg.scripts = sortObject(pkg.scripts, [
+    'dev',
+    'dev:test',
+    'dev:prod',
+    'lint',
+    'lint:eslint',
+    'lint:typescript',
+    'prettier',
+    'prepare',
+    'lint-staged',
+    'build',
+    'build:test',
+    'build:prod',
+    'test',
+    'serve'
+  ])
+  pkg = sortObject(pkg, ['version', 'name', 'scripts', 'dependencies', 'devDependencies'])
+  return pkg
+}

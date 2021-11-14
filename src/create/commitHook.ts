@@ -1,8 +1,6 @@
 #!/usr/bin/env node
 
-import path from 'path'
 import fs from 'fs'
-import { exists } from '../util/file'
 
 const main = (template: EditTemplate): CreateFunctionRes => {
   const { package: projectData } = template
@@ -57,7 +55,7 @@ export const initLintStage = (params: { isEslint: boolean; isPrettier: boolean; 
     }
   }
   // 将命令输出到lint-staged.config.js中
-  fs.writeFileSync(`${path}/lint-staged.config.js`, `module.exports = ${JSON.stringify(lint_stage)}`)
+  fs.writeFileSync(`${path}/lint-staged.config.js`, `module.exports = ${JSON.stringify(lint_stage, null, 1)}`)
 }
 
 export default main
