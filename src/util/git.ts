@@ -18,8 +18,8 @@ export interface APIReleaseData {
 }
 
 // 如何使用请访问：https://www.yinzhuoei.com/index.php/688.html
-export const CDN_URL = 'http://github.cdn.yinzhuoei.com'
-export const API_URL = 'http://github.api.yinzhuoei.com'
+export const CDN_URL = 'http://patient-dawn-bb9c.seho.workers.dev'
+export const API_URL = 'http://lucky-mountain-0caf.seho.workers.dev'
 export const GITHUB_API_URL = 'https://api.github.com'
 export const CNPM_URL = 'https://registry.npm.taobao.org'
 
