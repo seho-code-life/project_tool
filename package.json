@@ -1,15 +1,14 @@
 {
   "name": "enjoy-project-tool",
   "version": "1.1.7",
-  "description": "",
+  "description": "Enjoy 🌈 命令行助手",
   "main": "dist/main.js",
   "scripts": {
-    "run": "nodemon",
+    "dev": "nodemon",
     "build": "npx etsc && cp -rv src/template dist",
     "lint": "eslint 'src/**/*' --fix",
     "prettier": "prettier --write '**/*.{ts,js,json,markdown}'",
-    "lint-staged": "lint-staged",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "lint-staged": "lint-staged"
   },
   "lint-staged": {
     "*.{ts,js,json,markdown}": [
@@ -26,7 +25,7 @@
   "dependencies": {
     "chalk": "^4.1.2",
     "commander": "^8.1.0",
-    "concurrently": "^6.3.0",
+    "concurrently": "^6.4.0",
     "download-git-repo": "^3.0.2",
     "figlet": "^1.5.2",
     "flyio": "^0.6.14",
@@ -35,7 +34,7 @@
     "random-useragent": "^0.5.0"
   },
   "devDependencies": {
-    "@types/concurrently": "^6.3.0",
+    "@types/concurrently": "^6.4.0",
     "@types/figlet": "^1.5.4",
     "@types/inquirer": "^7.3.3",
     "@types/node": "^16.7.10",
@@ -43,13 +42,11 @@
     "@types/superagent": "^4.1.13",
     "@typescript-eslint/eslint-plugin": "^4.30.0",
     "@typescript-eslint/parser": "^4.30.0",
-    "esbuild-node-tsc": "^1.6.1",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-prettier": "^4.0.0",
     "husky": "^7.0.2",
     "lint-staged": "^11.1.2",
-    "nodemon": "^2.0.12",
     "prettier": "^2.3.2",
     "typescript": "^4.4.2"
   }

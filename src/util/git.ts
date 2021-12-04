@@ -29,16 +29,16 @@ export const CNPM_URL = 'https://registry.npm.taobao.org'
  * @param {{ reportUrl: string; targetBranch: string }} [params]
  */
 export const getReleaseList = (
-  params: { reportUrl: string; targetBranch: string } = {
-    reportUrl: `${GITHUB_API_URL}/repos/seho-code-life/project_template/releases`,
+  params: { targetBranch: string } = {
     targetBranch: 'base-template'
   }
 ): Promise<{
   latest: GithubAPIReleaseData
   list: GithubAPIReleaseData[]
 }> => {
+  const reportUrl = `${GITHUB_API_URL}/repos/seho-code-life/project_template/releases`
   return new Promise(async (resolve) => {
-    const res = await flying.get<GithubAPIReleaseData[]>(params.reportUrl + `?per_page=30`, {
+    const res = await flying.get<GithubAPIReleaseData[]>(reportUrl + `?per_page=30`, {
       headers: {
         'User-Agent': randomUseragent.getRandom()
       }

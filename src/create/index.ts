@@ -1,6 +1,6 @@
 import fs from 'fs'
 import ora from 'ora'
-import { getReleaseList, getLatestRelease, CDN_URL } from '../util/git'
+import { getReleaseList, getLatestRelease } from '../util/git'
 
 const spinner = ora()
 spinner.color = 'green'
@@ -11,7 +11,7 @@ export type FunctionKeys = 'editor' | 'commitHook' | 'eslint' | 'prettier' | 'vs
 export type CheckList = { name: string; value: FunctionKeys | string; checked: boolean }[]
 
 export type QuestionAnswers = {
-  template: string
+  template: string | null
   projectName: string
   functions: FunctionKeys[]
   'template-version': string | 'other'
@@ -20,18 +20,18 @@ export type QuestionAnswers = {
 }
 
 // 模板列表
-export const template: { name: string; value: string }[] = [
+export const template: { name: string; value: string | null }[] = [
   {
     name: 'vue3-vite2-ts-template (⚡️极速下载)',
-    value: `direct:${CDN_URL}/https://github.com/seho-code-life/project_template/archive/refs/tags/`
+    value: null
   },
   {
     name: 'node-command-ts-template',
-    value: 'seho-code-life/project_template#node-command-cli'
+    value: 'node-command-cli'
   },
   {
-    name: 'rollup-typescript-package',
-    value: 'seho-code-life/project_template#rollup-typescript-package(release)'
+    name: 'rollup-typescript-package-template',
+    value: 'rollup-typescript-package'
   }
 ]
 
@@ -115,8 +115,10 @@ export const questions = [
   {
     type: 'list',
     name: 'template-version',
-    choices: async () => {
+    choices: async (e) => {
       spinner.start('')
+      // 获取release 列表
+      console.log(e)
       const result = await getLatestRelease()
       spinner.stop()
       process.stdin.resume()
@@ -131,11 +133,7 @@ export const questions = [
         }
       ]
     },
-    message: '请选择模板的版本',
-    when: (answers: QuestionAnswers) => {
-      // 如果template是package的模板，就不让用户选择功能
-      return answers.template !== 'seho-code-life/project_template#rollup-typescript-package(release)'
-    }
+    message: '请选择模板的版本'
   },
   {
     type: 'list',
@@ -147,7 +145,7 @@ export const questions = [
       process.stdin.resume()
       return result.list.map((l) => {
         return {
-          name: `${l.tag_name} | 更新时间${l.created_at} ｜ 查看详情(${l.html_url})`,
+          name: `${l.tag_name} | 更新时间${l.created_at}`,
           value: `${l.tag_name}`
         }
       })

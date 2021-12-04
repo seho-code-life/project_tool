@@ -6,7 +6,7 @@ import fs from 'fs'
 import download from 'download-git-repo'
 import concurrently from 'concurrently'
 import chalk from 'chalk'
-import { CNPM_URL } from './util/git'
+import { CNPM_URL, CDN_URL } from './util/git'
 import { hasProjectGit, sortPkg } from './util/index'
 import handleEditor from './create/editor'
 import handleCommitHook, { initLintStage } from './create/commitHook'
@@ -29,16 +29,13 @@ let _projectPath = ''
 inquirer.prompt(questions).then((answers: QuestionAnswers) => {
   // 获取答案, 把答案的内容赋值给全局
   _answers = answers
-  // eslint-disable-next-line prefer-const
-  let { template: templateUrl, projectName, version } = answers
+  const { projectName, version } = answers
   // 根据项目名称得到项目根路径
   _projectPath = `${process.cwd()}/${projectName}`
+  // 设置template基础url
+  let templateUrl = `direct:${CDN_URL}/https://github.com/seho-code-life/project_template/archive/refs/tags/`
   // 处理templateUrl
-  if (templateUrl.includes('direct')) {
-    // 向templateUrl后面拼接版本号+zip格式
-    // 如果是自定义版本就使用version值，如果用户选择了最新版本，就直接使用template-version（最新版本的版本值）
-    templateUrl += `${answers['template-version'] === 'other' ? version : answers['template-version']}.zip`
-  }
+  templateUrl += `${answers['template-version'] === 'other' ? version : answers['template-version']}.zip`
   spinner.start('下载模板中, 请稍后...')
   // 开始下载模板
   downloadTemplate({
@@ -166,13 +163,13 @@ const install = async () => {
   // 初始化git
   // 如果用户选择了拦截钩子，就初始化husky pre commit
   try {
-    await concurrently([`npm --registry ${CNPM_URL} i`, `find ./ -type f -name '.gitkeep' -delete`], { cwd, raw: true })
+    await concurrently([`npm --registry ${CNPM_URL} i`, `find ./ -type f -name '.gitkeep' -delete`], { cwd })
     const hasGit = hasProjectGit(cwd)
     // 如果初始化git成功/本身具有git目录，就进入 添加husky命令 的逻辑
     if (hasGit) {
       if (functions && functions.includes('commitHook')) {
         // 执行husky命令时，需要首先执行预定义好的npm run prepare 再执行 add的操作
-        await concurrently([`npm run prepare && npx husky add .husky/pre-commit "npm run lint-staged"`], { cwd, raw: false })
+        await concurrently([`npm run prepare && npx husky add .husky/pre-commit "npm run lint-staged"`], { cwd })
       }
     }
     spinner.text = `✌️ 安装成功, 进入${projectName}开始撸码～`
