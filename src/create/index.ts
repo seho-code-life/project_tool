@@ -1,6 +1,6 @@
 import fs from 'fs'
 import ora from 'ora'
-import { getReleaseList, getLatestRelease } from '../util/git'
+import { getReleaseList } from '../util/git'
 
 const spinner = ora()
 spinner.color = 'green'
@@ -26,11 +26,11 @@ export const template: { name: string; value: string | null }[] = [
     value: null
   },
   {
-    name: 'node-command-ts-template',
+    name: 'node-command-ts-template (⚡️极速下载)',
     value: 'node-command-cli'
   },
   {
-    name: 'rollup-typescript-package-template',
+    name: 'rollup-typescript-package-template (⚡️极速下载)',
     value: 'rollup-typescript-package'
   }
 ]
@@ -115,17 +115,16 @@ export const questions = [
   {
     type: 'list',
     name: 'template-version',
-    choices: async (e) => {
+    choices: async (answers: QuestionAnswers) => {
       spinner.start('')
       // 获取release 列表
-      console.log(e)
-      const result = await getLatestRelease()
+      const result = await getReleaseList({ targetBranch: answers.template })
       spinner.stop()
       process.stdin.resume()
       return [
         {
           name: `默认最新版`,
-          value: `${result.version}`
+          value: `${result.latest.tag_name}`
         },
         {
           name: `自定义版本`,
@@ -138,9 +137,9 @@ export const questions = [
   {
     type: 'list',
     name: 'version',
-    choices: async () => {
+    choices: async (answers: QuestionAnswers) => {
       spinner.start('正在从远端获取版本列表...')
-      const result = await getReleaseList()
+      const result = await getReleaseList({ targetBranch: answers.template })
       spinner.stop()
       process.stdin.resume()
       return result.list.map((l) => {
@@ -161,8 +160,7 @@ export const questions = [
     choices: functionsList,
     message: '请选择默认安装的功能',
     when: (answers: QuestionAnswers) => {
-      // 如果template是package的模板，就不让用户选择功能
-      return answers.template !== 'seho-code-life/project_template#rollup-typescript-package(release)'
+      return answers['template'] === null
     }
   },
   {
@@ -171,8 +169,7 @@ export const questions = [
     choices: uiComponents,
     message: '请选择默认安装的ui组件库',
     when: (answers: QuestionAnswers) => {
-      // 如果template是package的模板，就不让用户选择功能
-      return answers.template !== 'seho-code-life/project_template#rollup-typescript-package(release)'
+      return answers['template'] === null
     }
   }
 ]

@@ -81,8 +81,8 @@ export const sortObject = <T extends Record<string, any>>(obj: T, keyOrder?: str
  * @return {*}
  */
 export const sortPkg = (pkg: PackageData) => {
-  pkg.dependencies = sortObject(pkg.dependencies)
-  pkg.devDependencies = sortObject(pkg.devDependencies)
+  if (pkg.dependencies) pkg.dependencies = sortObject(pkg.dependencies)
+  if (pkg.devDependencies) pkg.devDependencies = sortObject(pkg.devDependencies)
   pkg.scripts = sortObject(pkg.scripts, [
     'dev',
     'dev:test',
