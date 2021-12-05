@@ -19,7 +19,8 @@ const main = (template: EditTemplate): CreateFunctionRes => {
     'eslint-plugin-import': '^2.24.0',
     'eslint-plugin-vue': '^7.17.0',
     '@typescript-eslint/eslint-plugin': '^4.29.2',
-    '@typescript-eslint/parser': '^4.29.2'
+    '@typescript-eslint/parser': '^4.29.2',
+    'vue-eslint-parser': '^8.0.1'
   }
   // 将template中的vscode内容拷贝到根目录
   const rc = fs.readFileSync(path.resolve(__dirname, '..', 'template/eslint/.eslintrc.js'))
