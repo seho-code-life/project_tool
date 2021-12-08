@@ -28,7 +28,7 @@ export const CNPM_URL = 'https://registry.npm.taobao.org'
  * @param {{ reportUrl: string; targetBranch: string }} [params]
  */
 export const getReleaseList = (params: {
-  targetBranch: string | null
+  targetBranch: string
 }): Promise<{
   latest: GithubAPIReleaseData
   list: GithubAPIReleaseData[]
@@ -41,7 +41,7 @@ export const getReleaseList = (params: {
       }
     })
     // 过滤符合条件且取前30条记录
-    res.data = res.data.filter((d) => !d.draft && d.target_commitish.includes(params.targetBranch || 'base-template')).slice(0, 30)
+    res.data = res.data.filter((d) => !d.draft && d.target_commitish.includes(params.targetBranch)).slice(0, 30)
     resolve({
       latest: res.data[0],
       list: res.data.map((l) => {

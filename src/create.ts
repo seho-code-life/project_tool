@@ -8,12 +8,7 @@ import concurrently from 'concurrently'
 import chalk from 'chalk'
 import { CNPM_URL, CDN_URL } from './util/git'
 import { hasProjectGit, sortPkg } from './util/index'
-import handleEditor from './create/editor'
-import handleCommitHook, { initLintStage } from './create/commitHook'
-import handleEslint, { eslintConfigAddPrettier } from './create/eslint'
-import handlePrettier from './create/prettier'
 import handleVscode from './create/vscode'
-import handleJest from './create/jest'
 import handleUIComponents from './create/uiComponents'
 import { questions, FunctionKeys, QuestionAnswers } from './create/index'
 
@@ -62,12 +57,7 @@ const downloadTemplate = (params: { repository: string }): void => {
 
 // 功能列表的回调字典，内部函数处理了对package的读写&处理文件等操作
 const functionsCallBack: Record<FunctionKeys, (params: EditTemplate) => CreateFunctionRes> = {
-  editor: (params: EditTemplate) => handleEditor(params),
-  commitHook: (params: EditTemplate) => handleCommitHook(params),
-  eslint: (params: EditTemplate) => handleEslint(params),
-  prettier: (params: EditTemplate) => handlePrettier(params),
-  vscode: (params: EditTemplate) => handleVscode(params),
-  jest: (params: EditTemplate) => handleJest(params)
+  vscode: (params: EditTemplate) => handleVscode(params)
 }
 
 /**
@@ -85,22 +75,6 @@ const handleFunctions = (params: { package: PackageData }): Promise<PackageData>
       checkedfunctions.map((c) => {
         params.package = functionsCallBack[c]({ ...params, path: _projectPath }).projectData
       })
-      // 判断是否选择了eslint / prettier
-      const isEslint = checkedfunctions.includes('eslint')
-      const isPrettier = checkedfunctions.includes('prettier')
-      // 处理函数中有一些部分比较复杂，比如lint和eslint的组合搭配，这部分我们封装到commithook钩子里面
-      // 如果用户选择了commitHook，且要和eslint，prettier搭配
-      if (checkedfunctions.includes('commitHook')) {
-        initLintStage({
-          isPrettier,
-          isEslint,
-          path: _projectPath
-        })
-      }
-      // 如果二者都被选中，就需要eslint对prettier进行扩充，调用eslint中暴露的一个函数
-      if (isEslint && isPrettier) {
-        params.package = eslintConfigAddPrettier({ ...params, path: _projectPath }).projectData
-      }
       // 执行uiComponents的逻辑，函数会动态根据用户选择的ui框架返回正确的依赖选项（package.json）
       params.package = handleUIComponents({
         package: params.package,
@@ -155,7 +129,7 @@ const editPackageInfo = (): void => {
  * @name 对项目进行install安装依赖操作
  */
 const install = async () => {
-  const { projectName, functions } = _answers as QuestionAnswers
+  const { projectName } = _answers as QuestionAnswers
   const cwd = `${process.cwd()}/${projectName}`
   spinner.text = '🤔 自动安装&初始化项目中...'
   // 执行install
@@ -164,14 +138,8 @@ const install = async () => {
   // 如果用户选择了拦截钩子，就初始化husky pre commit
   try {
     await concurrently([`npm --registry ${CNPM_URL} i`, `find ./ -type f -name '.gitkeep' -delete`], { cwd })
-    const hasGit = hasProjectGit(cwd)
-    // 如果初始化git成功/本身具有git目录，就进入 添加husky命令 的逻辑
-    if (hasGit) {
-      if (functions && functions.includes('commitHook')) {
-        // 执行husky命令时，需要首先执行预定义好的npm run prepare 再执行 add的操作
-        await concurrently([`npm run prepare && npx husky add .husky/pre-commit "npm run lint-staged"`], { cwd })
-      }
-    }
+    // 调用初始化git的方法
+    hasProjectGit(cwd)
     spinner.text = `✌️ 安装成功, 进入${projectName}开始撸码～`
     spinner.succeed()
   } catch (error) {

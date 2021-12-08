@@ -6,12 +6,12 @@ const spinner = ora()
 spinner.color = 'green'
 
 // 定义功能的key数组
-export type FunctionKeys = 'editor' | 'commitHook' | 'eslint' | 'prettier' | 'vscode' | 'jest'
+export type FunctionKeys = 'vscode'
 // 定义checkbox类型
 export type CheckList = { name: string; value: FunctionKeys | string; checked: boolean }[]
 
 export type QuestionAnswers = {
-  template: string | null
+  template: string
   projectName: string
   functions: FunctionKeys[]
   'template-version': string | 'other'
@@ -23,7 +23,7 @@ export type QuestionAnswers = {
 export const template: { name: string; value: string | null }[] = [
   {
     name: 'vue3-vite2-ts-template (⚡️极速下载)',
-    value: null
+    value: 'vue3-vite2-ts-template'
   },
   {
     name: 'node-command-ts-template (⚡️极速下载)',
@@ -37,31 +37,6 @@ export const template: { name: string; value: string | null }[] = [
 
 // function功能列表
 export const functionsList: CheckList = [
-  {
-    name: 'editorconfig (统一IDE配置)',
-    value: 'editor',
-    checked: true
-  },
-  {
-    name: 'husky & lint-staged 基础GIT设施',
-    value: 'commitHook',
-    checked: true
-  },
-  {
-    name: 'eslint代码校验',
-    value: 'eslint',
-    checked: true
-  },
-  {
-    name: 'prettier美化',
-    value: 'prettier',
-    checked: true
-  },
-  {
-    name: 'jest单元测试',
-    value: 'jest',
-    checked: true
-  },
   {
     name: 'vscode相关配置 (setting + code-snippets)',
     value: 'vscode',
@@ -160,7 +135,7 @@ export const questions = [
     choices: functionsList,
     message: '请选择默认安装的功能',
     when: (answers: QuestionAnswers) => {
-      return answers['template'] === null
+      return answers['template'] === 'vue3-vite2-ts-template'
     }
   },
   {
@@ -169,7 +144,7 @@ export const questions = [
     choices: uiComponents,
     message: '请选择默认安装的ui组件库',
     when: (answers: QuestionAnswers) => {
-      return answers['template'] === null
+      return answers['template'] === 'vue3-vite2-ts-template'
     }
   }
 ]
