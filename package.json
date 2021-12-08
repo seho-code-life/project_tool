@@ -1,6 +1,6 @@
 {
   "name": "enjoy-project-tool",
-  "version": "1.1.9",
+  "version": "1.2.0",
   "description": "Enjoy 🌈 命令行助手",
   "main": "dist/main.js",
   "scripts": {
@@ -43,6 +43,7 @@
     "@typescript-eslint/eslint-plugin": "^4.30.0",
     "@typescript-eslint/parser": "^4.30.0",
     "esbuild": "^0.14.2",
+    "esbuild-darwin-64": "^0.14.2",
     "esbuild-node-tsc": "^1.8.2",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
