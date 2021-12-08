@@ -6,7 +6,7 @@ on:
 jobs:
   npm-publish:
     name: npm-publish
-    runs-on: ubuntu-latest
+    runs-on: [macOS, ARM64]
     steps:
       - name: 切换仓库
         uses: actions/checkout@master
