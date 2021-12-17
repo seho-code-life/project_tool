@@ -22,15 +22,19 @@ export type QuestionAnswers = {
 // 模板列表
 export const template: { name: string; value: string | null }[] = [
   {
-    name: 'vue3-vite2-ts-template (⚡️极速下载)',
+    name: 'vue3-vite2-ts-template',
     value: 'vue3-vite2-ts-template'
   },
   {
-    name: 'node-command-ts-template (⚡️极速下载)',
+    name: 'react-vite2-ts-template',
+    value: 'react-vite2-ts-template'
+  },
+  {
+    name: 'node-command-ts-template',
     value: 'node-command-cli'
   },
   {
-    name: 'rollup-typescript-package-template (⚡️极速下载)',
+    name: 'rollup-typescript-package-template',
     value: 'rollup-typescript-package'
   }
 ]
