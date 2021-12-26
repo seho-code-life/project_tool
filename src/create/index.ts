@@ -1,9 +1,14 @@
 import fs from 'fs'
 import ora from 'ora'
-import { getReleaseList } from '../util/git'
+import { getReleaseList, ReturnGetReleaseList } from '../util/git'
 
 const spinner = ora()
 spinner.color = 'green'
+
+const userName = 'seho-code-life'
+const projectName = `project_template`
+
+let releaseList: ReturnGetReleaseList
 
 // 定义功能的key数组
 export type FunctionKeys = 'vscode'
@@ -22,15 +27,19 @@ export type QuestionAnswers = {
 // 模板列表
 export const template: { name: string; value: string | null }[] = [
   {
-    name: 'vue3-vite2-ts-template (⚡️极速下载)',
+    name: 'vue3-vite2-ts-template',
     value: 'vue3-vite2-ts-template'
   },
   {
-    name: 'node-command-ts-template (⚡️极速下载)',
+    name: 'react-vite2-ts-template',
+    value: 'react-vite2-ts-template'
+  },
+  {
+    name: 'node-command-ts-template',
     value: 'node-command-cli'
   },
   {
-    name: 'rollup-typescript-package-template (⚡️极速下载)',
+    name: 'rollup-typescript-package-template',
     value: 'rollup-typescript-package'
   }
 ]
@@ -93,13 +102,13 @@ export const questions = [
     choices: async (answers: QuestionAnswers) => {
       spinner.start('')
       // 获取release 列表
-      const result = await getReleaseList({ targetBranch: answers.template })
+      releaseList = await getReleaseList({ targetBranch: answers.template, userName, projectName })
       spinner.stop()
       process.stdin.resume()
       return [
         {
           name: `默认最新版`,
-          value: `${result.latest.tag_name}`
+          value: `${releaseList.latest.tag_name}`
         },
         {
           name: `自定义版本`,
@@ -112,12 +121,8 @@ export const questions = [
   {
     type: 'list',
     name: 'version',
-    choices: async (answers: QuestionAnswers) => {
-      spinner.start('正在从远端获取版本列表...')
-      const result = await getReleaseList({ targetBranch: answers.template })
-      spinner.stop()
-      process.stdin.resume()
-      return result.list.map((l) => {
+    choices: async () => {
+      return releaseList.list.map((l) => {
         return {
           name: `${l.tag_name} | 更新时间${l.created_at}`,
           value: `${l.tag_name}`

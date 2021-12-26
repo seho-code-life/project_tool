@@ -3,10 +3,8 @@
 import inquirer from 'inquirer'
 import ora from 'ora'
 import fs from 'fs'
-import download from 'download-git-repo'
 import concurrently from 'concurrently'
-import chalk from 'chalk'
-import { CNPM_URL, CDN_URL } from './util/git'
+import { CNPM_URL, CDN_URL, downloadTemplate } from './util/git'
 import { hasProjectGit, sortPkg } from './util/index'
 import handleVscode from './create/vscode'
 import handleUIComponents from './create/uiComponents'
@@ -21,7 +19,7 @@ let _answers: QuestionAnswers | null = null
 let _projectPath = ''
 
 // 获取基础模板的release列表
-inquirer.prompt(questions).then((answers: QuestionAnswers) => {
+inquirer.prompt(questions).then(async (answers: QuestionAnswers) => {
   // 获取答案, 把答案的内容赋值给全局
   _answers = answers
   const { projectName, version } = answers
@@ -33,27 +31,12 @@ inquirer.prompt(questions).then((answers: QuestionAnswers) => {
   templateUrl += `${answers['template-version'] === 'other' ? version : answers['template-version']}.zip`
   spinner.start('下载模板中, 请稍后...')
   // 开始下载模板
-  downloadTemplate({
-    repository: templateUrl
+  await downloadTemplate({
+    repository: templateUrl,
+    projectName
   })
+  editPackageInfo()
 })
-
-/**
- * @name 下载远端模板
- * @param {{ repository: string; }} params
- */
-const downloadTemplate = (params: { repository: string }): void => {
-  const { repository } = params
-  download(repository, _answers?.projectName as string, (err) => {
-    if (!err) {
-      editPackageInfo()
-    } else {
-      console.log(err)
-      spinner.stop() // 停止
-      console.log(chalk.red('拉取模板出现未知错误'))
-    }
-  })
-}
 
 // 功能列表的回调字典，内部函数处理了对package的读写&处理文件等操作
 const functionsCallBack: Record<FunctionKeys, (params: EditTemplate) => CreateFunctionRes> = {
