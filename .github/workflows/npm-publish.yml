@@ -20,3 +20,15 @@ jobs:
         uses: JS-DevTools/npm-publish@v1
         with:
           token: ${{ secrets.NPM_AUTH_TOKEN }}
+  cnpm-sync:
+    name: cnpm-sync
+    needs: npm-publish
+    runs-on: ubuntu-latest
+    steps:
+      - name: 同步cnpm仓库
+        uses: fjogeleit/http-request-action@master
+        with:
+          # 需要把‘express’换成你的包名，谨记
+          url: "https://npmmirror.com/sync/enjoy-project-tool"
+          timeout: 50000
+          method: GET
