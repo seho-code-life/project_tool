@@ -13,7 +13,7 @@ jobs:
       - name: 准备Node环境
         uses: actions/setup-node@master
         with:
-          node-version: 12.13.0
+          node-version: 14.18.1
       - name: 安装依赖以及编译
         run: npm i && npm run build
       - name: 推送到NPM
