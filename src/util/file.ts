@@ -63,4 +63,15 @@ const exists = function (
   }
 }
 
-export { copy, exists }
+const writeFileRecursive = function (path: string, data: string, callback: (err: unknown) => void) {
+  const lastPath = path.substring(0, path.lastIndexOf('/'))
+  fs.mkdir(lastPath, { recursive: true }, (err) => {
+    if (err) return callback(err)
+    fs.writeFile(path, data, function (err) {
+      if (err) return callback(err)
+      return callback(null)
+    })
+  })
+}
+
+export { copy, exists, writeFileRecursive }

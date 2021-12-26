@@ -11,7 +11,7 @@ import welcome from './welcome.js'
 program.version(pkg.version, '-v, --version').description('查看当前版本号')
 
 // 允许的command
-type command = 'create'
+type command = 'create' | 'workflow'
 // command 处理函数
 type CommandFunction = {
   [key in command]: () => Promise<void>
@@ -22,9 +22,15 @@ const commandFunction: CommandFunction = {
     // 引入欢迎👏页面
     await welcome()
     await import('./create.js')
+  },
+  workflow: async () => {
+    // 引入欢迎👏页面
+    await welcome()
+    await import('./workflows.js')
   }
 }
 program.command('create').description('create template (创建模板)').action(commandFunction['create'])
+program.command('workflow').description('create workflow (创建CI模板)').action(commandFunction['workflow'])
 
 program.arguments('<command>').action((unknownCmd: string) => {
   // 获取允许的command
