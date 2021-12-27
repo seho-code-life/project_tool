@@ -6,6 +6,7 @@ specifiers:
   '@types/inquirer': ^7.3.3
   '@types/node': ^16.7.10
   '@types/random-useragent': ^0.3.0
+  '@types/semver': ^7.3.9
   '@types/superagent': ^4.1.13
   '@typescript-eslint/eslint-plugin': ^4.30.0
   '@typescript-eslint/parser': ^4.30.0
@@ -27,6 +28,7 @@ specifiers:
   ora: ^5.4.1
   prettier: ^2.3.2
   random-useragent: ^0.5.0
+  semver: ^7.3.5
   ts-node: ^10.4.0
   typescript: ^4.4.2
 
@@ -41,6 +43,7 @@ dependencies:
   leven: 3.1.0
   ora: 5.4.1
   random-useragent: 0.5.0
+  semver: 7.3.5
 
 devDependencies:
   '@types/concurrently': 6.4.0
@@ -48,6 +51,7 @@ devDependencies:
   '@types/inquirer': 7.3.3
   '@types/node': 16.11.17
   '@types/random-useragent': 0.3.1
+  '@types/semver': 7.3.9
   '@types/superagent': 4.1.13
   '@typescript-eslint/eslint-plugin': 4.33.0_3289a875d95a672b97ebf589745c66ef
   '@typescript-eslint/parser': 4.33.0_eslint@7.32.0+typescript@4.5.4
@@ -237,6 +241,10 @@ packages:
 
   /@types/random-useragent/0.3.1:
     resolution: {integrity: sha512-yVz7897JjjwS6V+lmxlu8pktzNnNWgtF9MGxfaRfI8o+hQageO9K+0hfwr8PspdFJIIRE9KkLqp4o5tlQqv/0w==}
+    dev: true
+
+  /@types/semver/7.3.9:
+    resolution: {integrity: sha512-L/TMpyURfBkf+o/526Zb6kd/tchUP3iBDEPjqjb+U2MAJhVRxxrmr2fwpe08E7QsV7YLcpq0tUaQ9O9x97ZIxQ==}
     dev: true
 
   /@types/superagent/4.1.13:
@@ -2455,7 +2463,6 @@ packages:
     engines: {node: '>=10'}
     dependencies:
       yallist: 4.0.0
-    dev: true
 
   /make-dir/1.3.0:
     resolution: {integrity: sha512-2w31R7SJtieJJnQtGc7RVL2StM2vGYVfqUOvUDxH6bC6aJTxPxTF0GnIgCyu7tjockiUWAYQRbxa7vKn34s5sQ==}
@@ -3130,7 +3137,6 @@ packages:
     hasBin: true
     dependencies:
       lru-cache: 6.0.0
-    dev: true
 
   /set-value/2.0.1:
     resolution: {integrity: sha512-JxHc1weCN68wRY0fhCoXpyK55m/XPHafOmK4UWD7m2CI14GMcFypt4w/0+NV5f/ZMby2F6S2wwA7fgynh9gWSw==}
@@ -3683,7 +3689,6 @@ packages:
 
   /yallist/4.0.0:
     resolution: {integrity: sha512-3wdGidZyq5PB084XLES5TpOSRA3wjXAlIWMhum2kRcv/41Sn2emQ0dycQW4uZXLejwKvg6EsvbdlVL+FYEct7A==}
-    dev: true
 
   /yaml/1.10.2:
     resolution: {integrity: sha512-r3vXyErRCYJ7wg28yvBY5VSoAF8ZvlcW9/BwUzEtUsjvX/DKs24dIkuwjtuprwJJHsbyUbLApepYTR1BN4uHrg==}
