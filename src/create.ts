@@ -58,7 +58,7 @@ const handleFunctions = (params: { package: PackageData }): Promise<PackageData>
       checkedfunctions.map((c) => {
         params.package = functionsCallBack[c]({ ...params, path: _projectPath }).projectData
       })
-      // 执行uiComponents的逻辑，函数会动态根据用户选择的ui框架返回正确的依赖选项（package.json）
+      // 执行uiComponents的逻辑，函数会动态根据用户选择的ui框架返回正确的依赖选项（package.json/vite.config.ts）
       params.package = handleUIComponents({
         package: params.package,
         path: _projectPath,
@@ -120,7 +120,7 @@ const install = async () => {
   // 初始化git
   // 如果用户选择了拦截钩子，就初始化husky pre commit
   try {
-    await concurrently([`npm --registry ${CNPM_URL} i`, `find ./ -type f -name '.gitkeep' -delete`], { cwd })
+    await concurrently([`npm --registry ${CNPM_URL} i`, `find ./ -type f -name '.gitkeep' -delete`], { cwd, prefix: 'none' })
     // 调用初始化git的方法
     hasProjectGit(cwd)
     spinner.text = `✌️ 安装成功, 进入${projectName}开始撸码～`
