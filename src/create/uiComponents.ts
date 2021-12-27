@@ -16,7 +16,7 @@ const dependencies: Record<UIComponents['name'], { name: string; version: string
   'element-plus': {
     name: 'element-plus',
     version: '1.2.0-beta.3',
-    styleImport: 'ElementPlusResolver()',
+    styleImport: 'ElementPlusResolve()',
     componentsImport: 'ElementPlusResolver()'
   },
   vant: {
@@ -47,7 +47,7 @@ export const handleViteConfig = (path: string, name: UIComponents['name']) => {
     // 替换components数组
     viteConfigFile = viteConfigFile.replace(/(?<=ViteComponents[\S\s]*resolvers.*\[).*(?=\])/, dependencies[name].componentsImport)
     // 替换style数组
-    viteConfigFile = viteConfigFile.replace(/(?<=styleImport[\S\s]*resolvers.*\[).*(?=\])/, dependencies[name].styleImport)
+    viteConfigFile = viteConfigFile.replace(/(?<=styleImport[\S\s]*resolves.*\[).*(?=\])/, dependencies[name].styleImport)
     fs.writeFileSync(configPath, viteConfigFile)
   }
 }
