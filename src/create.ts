@@ -58,7 +58,7 @@ const handleFunctions = (params: { package: PackageData }): Promise<PackageData>
       checkedfunctions.map((c) => {
         params.package = functionsCallBack[c]({ ...params, path: _projectPath }).projectData
       })
-      // 执行uiComponents的逻辑，函数会动态根据用户选择的ui框架返回正确的依赖选项（package.json）
+      // 执行uiComponents的逻辑，函数会动态根据用户选择的ui框架返回正确的依赖选项（package.json/vite.config.ts）
       params.package = handleUIComponents({
         package: params.package,
         path: _projectPath,
