@@ -12,6 +12,7 @@ import { questions, FunctionKeys, QuestionAnswers } from './create/index'
 
 const spinner = ora()
 spinner.color = 'green'
+const prompt = inquirer.createPromptModule()
 
 // 答案内容
 let _answers: QuestionAnswers | null = null
@@ -19,7 +20,7 @@ let _answers: QuestionAnswers | null = null
 let _projectPath = ''
 
 // 获取基础模板的release列表
-inquirer.prompt(questions).then(async (answers: QuestionAnswers) => {
+prompt(questions).then(async (answers: QuestionAnswers) => {
   // 获取答案, 把答案的内容赋值给全局
   _answers = answers
   const { projectName, version } = answers
