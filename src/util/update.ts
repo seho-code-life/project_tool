@@ -3,11 +3,14 @@ import concurrently from 'concurrently'
 import ora from 'ora'
 import semver from 'semver'
 import flying from 'flyio'
+import { spawn } from 'child_process'
 import { CNPM_URL } from './git'
 import pkg from '../../package.json'
 
 const spinner = ora()
 spinner.color = 'green'
+
+const prompt = inquirer.createPromptModule()
 
 // 检查新版本的函数
 export const compareNewVersion = async (): Promise<boolean | string> => {
@@ -32,23 +35,23 @@ const update = (targerVersion: string) => {
   return new Promise(async (resolve) => {
     spinner.text = `更新检测程序运行完成，您需要更新了⬇️`
     spinner.succeed()
-    inquirer
-      .prompt([
-        {
-          type: 'confirm',
-          message: `您是否需要使用最新版本运行本工具 (最新版本: ${targerVersion}, 目前版本: ${pkg.version})`,
-          name: 'useLatestVersion'
-        }
-      ])
-      .then(async (res) => {
-        if (res.useLatestVersion) {
-          // 如果用户选择更新，调用安装方法
-          await concurrently([`npm --registry ${CNPM_URL} i enjoy-project-tool@${targerVersion} -g`], { prefix: 'none' })
-          resolve(null)
-        } else {
-          resolve(null)
-        }
-      })
+    prompt([
+      {
+        type: 'confirm',
+        message: `您是否需要使用最新版本运行本工具 (最新版本: ${targerVersion}, 目前版本: ${pkg.version})`,
+        name: 'useLatestVersion'
+      }
+    ]).then(async (res) => {
+      // 用户如果选择了使用最新版本更新
+      if (res.useLatestVersion) {
+        // 如果用户选择更新，调用安装方法
+        await concurrently([`npm --registry ${CNPM_URL} i enjoy-project-tool@${targerVersion} -g`], { prefix: 'none' })
+        resolve(true)
+      } else {
+        // 用户没有选择
+        resolve(false)
+      }
+    })
   })
 }
 
