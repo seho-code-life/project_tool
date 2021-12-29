@@ -55,11 +55,11 @@ const preAction = async (cb: () => void, command?: string) => {
 program
   .command('create')
   .description('create template (创建模板)')
-  .action(() => preAction(() => commandFunction['create']))
+  .action(() => preAction(commandFunction['create']))
 program
   .command('workflow')
   .description('create workflow (创建CI模板)')
-  .action(() => preAction(() => commandFunction['workflow']))
+  .action(() => preAction(commandFunction['workflow']))
 
 program.arguments('<command>').action((unknownCmd: string) => {
   // 获取允许的command

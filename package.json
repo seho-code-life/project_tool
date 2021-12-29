@@ -1,6 +1,6 @@
 {
   "name": "enjoy-project-tool",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "description": "Enjoy 🌈 命令行助手",
   "main": "dist/main.js",
   "scripts": {
