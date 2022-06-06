@@ -3,7 +3,6 @@ import concurrently from 'concurrently'
 import ora from 'ora'
 import semver from 'semver'
 import flying from 'flyio'
-import { spawn } from 'child_process'
 import { CNPM_URL } from './git'
 import pkg from '../../package.json'
 

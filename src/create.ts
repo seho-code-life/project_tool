@@ -4,8 +4,8 @@ import inquirer from 'inquirer'
 import ora from 'ora'
 import fs from 'fs'
 import concurrently from 'concurrently'
-import { CNPM_URL, CDN_URL, downloadTemplate } from './util/git'
-import { hasProjectGit, sortPkg } from './util/index'
+import { CDN_URL, downloadTemplate } from './util/git'
+import { sortPkg } from './util/index'
 import handleVscode from './create/vscode'
 import handleUIComponents from './create/uiComponents'
 import { questions, FunctionKeys, QuestionAnswers } from './create/index'
@@ -31,12 +31,18 @@ prompt(questions).then(async (answers: QuestionAnswers) => {
   // 处理templateUrl
   templateUrl += `${answers['template-version'] === 'other' ? version : answers['template-version']}.zip`
   spinner.start('下载模板中, 请稍后...')
+  console.log(templateUrl)
   // 开始下载模板
-  await downloadTemplate({
+  const downResult = await downloadTemplate({
     repository: templateUrl,
     projectName
   })
-  editPackageInfo()
+  // 判断下载结果
+  if (downResult === null) {
+    editPackageInfo()
+  } else {
+    spinner.stop()
+  }
 })
 
 // 功能列表的回调字典，内部函数处理了对package的读写&处理文件等操作
@@ -103,32 +109,8 @@ const editPackageInfo = (): void => {
     // 写入文件
     fs.writeFile(`${_projectPath}/package.json`, str, function (err) {
       if (err) throw err
-      spinner.text = `下载完成, 正在自动安装项目依赖...`
-      install()
+      spinner.text = `下载完成, 请cd到项目目录，运行npm/yarn/pnpm install即可`
+      spinner.succeed()
     })
   })
-}
-
-/**
- * @name 对项目进行install安装依赖操作
- */
-const install = async () => {
-  const { projectName } = _answers as QuestionAnswers
-  const cwd = `${process.cwd()}/${projectName}`
-  spinner.text = '🤔 自动安装&初始化项目中...'
-  // 执行install
-  // 删除空文件夹中的gitkeep 占位文件
-  // 初始化git
-  // 如果用户选择了拦截钩子，就初始化husky pre commit
-  try {
-    await concurrently([`npm --registry ${CNPM_URL} i`, `find ./ -type f -name '.gitkeep' -delete`], { cwd, prefix: 'none' })
-    // 调用初始化git的方法
-    hasProjectGit(cwd)
-    spinner.text = `✌️ 安装成功, 进入${projectName}开始撸码～`
-    spinner.succeed()
-  } catch (error) {
-    spinner.text = `自动安装失败, 请查看错误，且之后自行安装依赖～`
-    spinner.fail()
-    console.error(error)
-  }
 }

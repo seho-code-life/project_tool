@@ -4,5 +4,6 @@
   "typescript.preferences.importModuleSpecifier": "relative",
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": true
-  }
+  },
+  "commentTranslate.multiLineMerge": true
 }

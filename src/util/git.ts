@@ -70,9 +70,9 @@ export const downloadTemplate = (params: { repository: string; projectName: stri
       if (!err) {
         resolve(null)
       } else {
-        console.log(err)
         spinner.stop() // 停止
         console.log(chalk.red('拉取出现未知错误'))
+        resolve(false)
       }
     })
   })
